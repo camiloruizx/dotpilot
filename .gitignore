@@ -1,0 +1,11 @@
+node_modules/
+*.vsix
+# Copias de seguridad y resultados locales de las pruebas: contienen rutas y datos de este equipo
+_rollbacks/
+test-integration/.results/
+test-integration/fixtures/**/bin/
+test-integration/fixtures/**/obj/
+.vscode-test/
+
+# Configuracion local del servidor MCP: contiene rutas de este equipo
+.mcp.json

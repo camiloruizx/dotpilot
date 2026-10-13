@@ -1,0 +1,17 @@
+node_modules/**
+test/**
+.vscode/**
+.gitignore
+package-lock.json
+**/*.vsix
+_rollbacks/**
+test-integration/**
+docs/**
+media/screenshots/**
+media/ICON.md
+README.es.md
+VALIDACION.md
+.github/**
+SECURITY.md
+CONTRIBUTING.md
+.vscode-test/**

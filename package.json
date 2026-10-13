@@ -1,0 +1,914 @@
+{
+  "name": "dotpilot",
+  "displayName": "DotPilot",
+  "description": "%extension.description%",
+  "version": "0.9.0",
+  "publisher": "camiloruizx",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Debuggers",
+    "Other"
+  ],
+  "license": "MIT",
+  "main": "./src/extension.js",
+  "activationEvents": [
+    "workspaceContains:**/*.{csproj,fsproj,vbproj,sln,slnx}",
+    "workspaceContains:**/{package.json,artisan,manage.py,composer.json,requirements.txt,pyproject.toml}",
+    "workspaceContains:**/{compose.yaml,compose.yml,docker-compose.yaml,docker-compose.yml}",
+    "onView:dotpilot.panel"
+  ],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": false,
+      "description": "%trust.description%"
+    },
+    "virtualWorkspaces": false
+  },
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "test:integration": "node test-integration/run.js",
+    "package": "vsce package --allow-missing-repository --out ../dotpilot-0.9.0.vsix",
+    "test:assistant": "node test-integration/real-assistant.js",
+    "test:assistant:codex": "node test-integration/real-assistant-cli.js codex",
+    "test:assistant:gemini": "node test-integration/real-assistant-cli.js gemini",
+    "test:assistant:copilot": "node test-integration/real-assistant-cli.js copilot"
+  },
+  "contributes": {
+    "commands": [
+      {
+        "command": "dotpilot.run",
+        "title": "%dotpilot.run%",
+        "category": "DotPilot",
+        "icon": "$(play)",
+        "enablement": "!dotpilot.busy && !dotpilot.active"
+      },
+      {
+        "command": "dotpilot.debug",
+        "title": "%dotpilot.debug%",
+        "category": "DotPilot",
+        "icon": "$(debug-alt)",
+        "enablement": "!dotpilot.busy && !dotpilot.active && dotpilot.dotnet"
+      },
+      {
+        "command": "dotpilot.pause",
+        "title": "%dotpilot.pause%",
+        "category": "DotPilot",
+        "icon": "$(debug-pause)",
+        "enablement": "dotpilot.debugging && !dotpilot.paused"
+      },
+      {
+        "command": "dotpilot.stop",
+        "title": "%dotpilot.stop%",
+        "category": "DotPilot",
+        "icon": "$(debug-stop)",
+        "enablement": "dotpilot.canStop"
+      },
+      {
+        "command": "dotpilot.restart",
+        "title": "%dotpilot.restart%",
+        "category": "DotPilot",
+        "icon": "$(debug-restart)",
+        "enablement": "dotpilot.active && !dotpilot.busy"
+      },
+      {
+        "command": "dotpilot.build",
+        "title": "%dotpilot.build%",
+        "category": "DotPilot",
+        "icon": "$(tools)",
+        "enablement": "!dotpilot.busy && dotpilot.dotnet"
+      },
+      {
+        "command": "dotpilot.rebuild",
+        "title": "%dotpilot.rebuild%",
+        "category": "DotPilot",
+        "enablement": "!dotpilot.busy && dotpilot.dotnet"
+      },
+      {
+        "command": "dotpilot.clean",
+        "title": "%dotpilot.clean%",
+        "category": "DotPilot",
+        "enablement": "!dotpilot.busy && dotpilot.dotnet"
+      },
+      {
+        "command": "dotpilot.analyze",
+        "title": "%dotpilot.analyze%",
+        "category": "DotPilot",
+        "enablement": "!dotpilot.busy && dotpilot.dotnet"
+      },
+      {
+        "command": "dotpilot.selectProject",
+        "title": "%dotpilot.selectProject%",
+        "category": "DotPilot",
+        "enablement": "!dotpilot.busy && !dotpilot.active"
+      },
+      {
+        "command": "dotpilot.selectProfile",
+        "title": "%dotpilot.selectProfile%",
+        "category": "DotPilot",
+        "enablement": "!dotpilot.busy && !dotpilot.active"
+      },
+      {
+        "command": "dotpilot.selectConfiguration",
+        "title": "%dotpilot.selectConfiguration%",
+        "category": "DotPilot",
+        "enablement": "!dotpilot.busy && !dotpilot.active && dotpilot.dotnet"
+      },
+      {
+        "command": "dotpilot.refresh",
+        "title": "%dotpilot.refresh%",
+        "category": "DotPilot",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "dotpilot.buildMenu",
+        "title": "%dotpilot.buildMenu%",
+        "category": "DotPilot",
+        "enablement": "dotpilot.dotnet"
+      },
+      {
+        "command": "dotpilot.watch",
+        "title": "%dotpilot.watch%",
+        "category": "DotPilot",
+        "enablement": "!dotpilot.busy && !dotpilot.active && dotpilot.dotnet"
+      },
+      {
+        "command": "dotpilot.restore",
+        "title": "%dotpilot.restore%",
+        "category": "DotPilot",
+        "enablement": "!dotpilot.busy && dotpilot.dotnet"
+      },
+      {
+        "command": "dotpilot.test",
+        "title": "%dotpilot.test%",
+        "category": "DotPilot",
+        "enablement": "!dotpilot.busy && dotpilot.dotnet"
+      },
+      {
+        "command": "dotpilot.selectTarget",
+        "title": "%dotpilot.selectTarget%",
+        "category": "DotPilot",
+        "enablement": "!dotpilot.busy && dotpilot.dotnet"
+      },
+      {
+        "command": "dotpilot.selectFramework",
+        "title": "%dotpilot.selectFramework%",
+        "category": "DotPilot",
+        "enablement": "!dotpilot.busy && !dotpilot.active && dotpilot.dotnet"
+      },
+      {
+        "command": "dotpilot.openBrowser",
+        "title": "%dotpilot.openBrowser%",
+        "category": "DotPilot"
+      },
+      {
+        "command": "dotpilot.editProfile",
+        "title": "%dotpilot.editProfile%",
+        "category": "DotPilot"
+      },
+      {
+        "command": "dotpilot.showOutput",
+        "title": "%dotpilot.showOutput%",
+        "category": "DotPilot"
+      },
+      {
+        "command": "dotpilot.showProblems",
+        "title": "%dotpilot.showProblems%",
+        "category": "DotPilot"
+      },
+      {
+        "command": "dotpilot.diagnostics",
+        "title": "%dotpilot.diagnostics%",
+        "category": "DotPilot",
+        "enablement": "dotpilot.dotnet"
+      },
+      {
+        "command": "dotpilot.stepOver",
+        "title": "%dotpilot.stepOver%",
+        "category": "DotPilot"
+      },
+      {
+        "command": "dotpilot.stepInto",
+        "title": "%dotpilot.stepInto%",
+        "category": "DotPilot"
+      },
+      {
+        "command": "dotpilot.stepOut",
+        "title": "%dotpilot.stepOut%",
+        "category": "DotPilot"
+      },
+      {
+        "command": "dotpilot.continue",
+        "title": "%dotpilot.continue%",
+        "category": "DotPilot",
+        "icon": "$(debug-continue)",
+        "enablement": "dotpilot.debugging && dotpilot.paused"
+      },
+      {
+        "command": "dotpilot.showPanel",
+        "title": "%dotpilot.showPanel%",
+        "category": "DotPilot",
+        "icon": "$(layout-sidebar)"
+      },
+      {
+        "command": "dotpilot.hidePanel",
+        "title": "%dotpilot.hidePanel%",
+        "category": "DotPilot",
+        "icon": "$(layout-sidebar)"
+      },
+      {
+        "command": "dotpilot.showSettings",
+        "title": "%dotpilot.showSettings%",
+        "category": "DotPilot",
+        "icon": "$(settings-gear)"
+      },
+      {
+        "command": "dotpilot.selectBrowser",
+        "title": "%dotpilot.selectBrowser%",
+        "category": "DotPilot"
+      },
+      {
+        "command": "dotpilot.browserEdge",
+        "title": "%dotpilot.browserEdge%",
+        "category": "DotPilot",
+        "toggled": "dotpilot.browser == edge"
+      },
+      {
+        "command": "dotpilot.browserChrome",
+        "title": "%dotpilot.browserChrome%",
+        "category": "DotPilot",
+        "toggled": "dotpilot.browser == chrome"
+      },
+      {
+        "command": "dotpilot.browserExternal",
+        "title": "%dotpilot.browserExternal%",
+        "category": "DotPilot",
+        "toggled": "dotpilot.browser == external"
+      },
+      {
+        "command": "dotpilot.browserDefault",
+        "title": "%dotpilot.browserDefault%",
+        "category": "DotPilot"
+      },
+      {
+        "command": "dotpilot.connectAssistants",
+        "title": "%dotpilot.connectAssistants%",
+        "category": "DotPilot",
+        "icon": "$(sparkle)"
+      }
+    ],
+    "views": {
+      "explorer": [
+        {
+          "id": "dotpilot.panel",
+          "name": "DotPilot",
+          "type": "webview"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "dotpilot.showSettings",
+          "when": "view == dotpilot.panel",
+          "group": "navigation@1"
+        },
+        {
+          "command": "dotpilot.refresh",
+          "when": "view == dotpilot.panel",
+          "group": "navigation@2"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "dotpilot.run",
+          "when": "dotpilot.hasProjects && config.dotpilot.showEditorToolbar && !dotpilot.busy && !dotpilot.active",
+          "group": "navigation@18"
+        },
+        {
+          "command": "dotpilot.pause",
+          "when": "dotpilot.hasProjects && config.dotpilot.showEditorToolbar && dotpilot.debugging && !dotpilot.paused",
+          "group": "navigation@19"
+        },
+        {
+          "command": "dotpilot.continue",
+          "when": "dotpilot.hasProjects && config.dotpilot.showEditorToolbar && dotpilot.debugging && dotpilot.paused",
+          "group": "navigation@19"
+        },
+        {
+          "command": "dotpilot.stop",
+          "when": "dotpilot.hasProjects && config.dotpilot.showEditorToolbar && dotpilot.canStop",
+          "group": "navigation@20"
+        },
+        {
+          "submenu": "dotpilot.main",
+          "when": "dotpilot.hasProjects && config.dotpilot.showEditorToolbar",
+          "group": "navigation@17"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "dotpilot.showPanel",
+          "when": "!dotpilot.panelVisible"
+        },
+        {
+          "command": "dotpilot.hidePanel",
+          "when": "dotpilot.panelVisible"
+        }
+      ],
+      "dotpilot.main": [
+        {
+          "command": "dotpilot.showPanel",
+          "group": "1_panel@1",
+          "when": "!dotpilot.panelVisible"
+        },
+        {
+          "command": "dotpilot.hidePanel",
+          "group": "1_panel@1",
+          "when": "dotpilot.panelVisible"
+        },
+        {
+          "command": "dotpilot.run",
+          "group": "2_run@1"
+        },
+        {
+          "command": "dotpilot.debug",
+          "group": "2_run@2"
+        },
+        {
+          "command": "dotpilot.watch",
+          "group": "2_run@3"
+        },
+        {
+          "command": "dotpilot.pause",
+          "group": "2_run@4",
+          "when": "dotpilot.debugging && !dotpilot.paused"
+        },
+        {
+          "command": "dotpilot.continue",
+          "group": "2_run@4",
+          "when": "dotpilot.debugging && dotpilot.paused"
+        },
+        {
+          "command": "dotpilot.stop",
+          "group": "2_run@5",
+          "when": "dotpilot.canStop"
+        },
+        {
+          "command": "dotpilot.restart",
+          "group": "2_run@6",
+          "when": "dotpilot.active"
+        },
+        {
+          "submenu": "dotpilot.launchOptions",
+          "group": "3_project@1"
+        },
+        {
+          "submenu": "dotpilot.compile",
+          "group": "3_project@2"
+        },
+        {
+          "command": "dotpilot.showSettings",
+          "group": "4_settings@1"
+        },
+        {
+          "submenu": "dotpilot.browsers",
+          "group": "2_run@7"
+        },
+        {
+          "command": "dotpilot.connectAssistants",
+          "group": "4_settings@2"
+        }
+      ],
+      "dotpilot.launchOptions": [
+        {
+          "command": "dotpilot.selectProject",
+          "group": "dotpilot@0"
+        },
+        {
+          "command": "dotpilot.selectProfile",
+          "group": "dotpilot@1"
+        },
+        {
+          "command": "dotpilot.selectConfiguration",
+          "group": "dotpilot@2"
+        },
+        {
+          "command": "dotpilot.selectFramework",
+          "group": "dotpilot@3"
+        },
+        {
+          "command": "dotpilot.openBrowser",
+          "group": "dotpilot@5"
+        },
+        {
+          "command": "dotpilot.selectBrowser",
+          "group": "dotpilot@4"
+        }
+      ],
+      "dotpilot.compile": [
+        {
+          "command": "dotpilot.build",
+          "group": "dotnet@0"
+        },
+        {
+          "command": "dotpilot.rebuild",
+          "group": "dotnet@1"
+        },
+        {
+          "command": "dotpilot.clean",
+          "group": "dotnet@2"
+        },
+        {
+          "command": "dotpilot.restore",
+          "group": "dotnet@3"
+        },
+        {
+          "command": "dotpilot.test",
+          "group": "dotnet@4"
+        },
+        {
+          "command": "dotpilot.analyze",
+          "group": "dotnet@5"
+        },
+        {
+          "command": "dotpilot.selectTarget",
+          "group": "dotnet@6"
+        }
+      ],
+      "dotpilot.browsers": [
+        {
+          "command": "dotpilot.browserChrome",
+          "group": "1_browsers@0"
+        },
+        {
+          "command": "dotpilot.browserEdge",
+          "group": "1_browsers@1"
+        },
+        {
+          "command": "dotpilot.browserExternal",
+          "group": "1_browsers@2"
+        },
+        {
+          "command": "dotpilot.browserDefault",
+          "group": "2_default"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "DotPilot",
+      "properties": {
+        "dotpilot.buildScope": {
+          "type": "string",
+          "enum": [
+            "solution",
+            "project"
+          ],
+          "default": "solution",
+          "description": "%dotpilot.buildScope.description%",
+          "scope": "resource"
+        },
+        "dotpilot.dotnetPath": {
+          "type": "string",
+          "default": "dotnet",
+          "description": "%dotpilot.dotnetPath.description%",
+          "scope": "resource"
+        },
+        "dotpilot.showStatusBar": {
+          "type": "boolean",
+          "default": false,
+          "description": "%dotpilot.showStatusBar.description%",
+          "scope": "resource"
+        },
+        "dotpilot.openBrowser": {
+          "type": "boolean",
+          "default": true,
+          "scope": "resource",
+          "description": "%dotpilot.openBrowser.description%"
+        },
+        "dotpilot.showEditorToolbar": {
+          "type": "boolean",
+          "default": true,
+          "scope": "window",
+          "description": "%dotpilot.showEditorToolbar.description%"
+        },
+        "dotpilot.browser": {
+          "type": "string",
+          "enum": [
+            "edge",
+            "chrome",
+            "external"
+          ],
+          "default": "edge",
+          "scope": "resource",
+          "enumDescriptions": [
+            "%dotpilot.browser.enum.0%",
+            "%dotpilot.browser.enum.1%",
+            "%dotpilot.browser.enum.2%"
+          ],
+          "description": "%dotpilot.browser.description%"
+        },
+        "dotpilot.language": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "en",
+            "es"
+          ],
+          "default": "auto",
+          "scope": "window",
+          "description": "%dotpilot.language.description%"
+        },
+        "dotpilot.pythonPath": {
+          "type": "string",
+          "default": "",
+          "scope": "resource",
+          "description": "%dotpilot.pythonPath.description%"
+        },
+        "dotpilot.phpPath": {
+          "type": "string",
+          "default": "php",
+          "scope": "resource",
+          "description": "%dotpilot.phpPath.description%"
+        },
+        "dotpilot.assistantsEnabled": {
+          "type": "boolean",
+          "default": false,
+          "scope": "machine",
+          "description": "%dotpilot.assistantsEnabled.description%"
+        },
+        "dotpilot.assistantsPermission": {
+          "type": "string",
+          "enum": [
+            "ask",
+            "allow"
+          ],
+          "default": "ask",
+          "scope": "machine",
+          "description": "%dotpilot.assistantsPermission.description%"
+        },
+        "dotpilot.laragonPath": {
+          "type": "string",
+          "default": "",
+          "scope": "resource",
+          "description": "%dotpilot.laragonPath.description%"
+        }
+      }
+    },
+    "taskDefinitions": [
+      {
+        "required": [
+          "operation",
+          "id"
+        ],
+        "type": "dotpilot",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "operation": {
+            "type": "string"
+          }
+        }
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "dotpilot.run",
+        "key": "ctrl+alt+f5",
+        "mac": "cmd+alt+f5",
+        "when": "dotpilot.hasProjects && !dotpilot.busy && !dotpilot.active"
+      },
+      {
+        "command": "dotpilot.debug",
+        "key": "ctrl+alt+f6",
+        "mac": "cmd+alt+f6",
+        "when": "dotpilot.hasProjects && !dotpilot.busy && !dotpilot.active && dotpilot.dotnet"
+      },
+      {
+        "command": "dotpilot.build",
+        "key": "ctrl+alt+b",
+        "mac": "cmd+alt+b",
+        "when": "dotpilot.hasProjects && !dotpilot.busy && dotpilot.dotnet"
+      }
+    ],
+    "submenus": [
+      {
+        "id": "dotpilot.compile",
+        "label": "%dotpilot.compile.label%",
+        "icon": "$(tools)"
+      },
+      {
+        "id": "dotpilot.launchOptions",
+        "label": "%dotpilot.launchOptions.label%",
+        "icon": "$(settings-gear)"
+      },
+      {
+        "id": "dotpilot.main",
+        "label": "DotPilot",
+        "icon": "media/dotpilot-toolbar.svg"
+      },
+      {
+        "id": "dotpilot.browsers",
+        "label": "%dotpilot.browsers.label%"
+      }
+    ],
+    "languageModelTools": [
+      {
+        "name": "dotpilot_list_projects",
+        "displayName": "%dotpilot.tool.list_projects.name%",
+        "userDescription": "%dotpilot.tool.list_projects.description%",
+        "modelDescription": "List the runnable projects DotPilot found in the workspace (.NET, Node.js, PHP/Laravel, Python, Docker Compose), with the launch profiles of each and which project and profile are currently selected. Call this first to learn the valid project ids and profile names.",
+        "toolReferenceName": "dotpilotListProjects",
+        "canBeReferencedInPrompt": true,
+        "icon": "$(list-tree)",
+        "inputSchema": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "dotpilot_get_status",
+        "displayName": "%dotpilot.tool.get_status.name%",
+        "userDescription": "%dotpilot.tool.get_status.description%",
+        "modelDescription": "Get what DotPilot is doing now: idle, busy, running, hot-reload, debugging or paused; the selected project and profile; the server URL when known; and the result of the last operation, including errors.",
+        "toolReferenceName": "dotpilotGetStatus",
+        "canBeReferencedInPrompt": true,
+        "icon": "$(pulse)",
+        "inputSchema": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "dotpilot_select_project",
+        "displayName": "%dotpilot.tool.select_project.name%",
+        "userDescription": "%dotpilot.tool.select_project.description%",
+        "modelDescription": "Select the project DotPilot will run. `project` is an id, name or path from dotpilot_list_projects. Starts nothing. Fails while an app is running: stop it first.",
+        "toolReferenceName": "dotpilotSelectProject",
+        "canBeReferencedInPrompt": true,
+        "icon": "$(project)",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "project": {
+              "type": "string",
+              "description": "Project id, name or path."
+            }
+          },
+          "required": [
+            "project"
+          ],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "dotpilot_select_profile",
+        "displayName": "%dotpilot.tool.select_profile.name%",
+        "userDescription": "%dotpilot.tool.select_profile.description%",
+        "modelDescription": "Select the launch profile of the selected project: a .NET launch profile (or \"none\"), an npm script, a PHP/Python server or a Docker Compose service. Valid names come from dotpilot_list_projects. Fails while an app is running.",
+        "toolReferenceName": "dotpilotSelectProfile",
+        "canBeReferencedInPrompt": true,
+        "icon": "$(settings-gear)",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "profile": {
+              "type": "string",
+              "description": "Profile name."
+            }
+          },
+          "required": [
+            "profile"
+          ],
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "dotpilot_run",
+        "displayName": "%dotpilot.tool.run.name%",
+        "userDescription": "%dotpilot.tool.run.description%",
+        "modelDescription": "Run the selected project without debugging. For web servers it waits until the server answers (up to wait_seconds) and returns its URL. The app keeps running until dotpilot_stop is called. Opens the browser when the profile and settings ask for it.",
+        "toolReferenceName": "dotpilotRun",
+        "canBeReferencedInPrompt": true,
+        "icon": "$(play)",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "wait_seconds": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 120,
+              "description": "Seconds to wait for the server to answer before returning. Default 30. Use 0 to return immediately."
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "dotpilot_debug",
+        "displayName": "%dotpilot.tool.debug.name%",
+        "userDescription": "%dotpilot.tool.debug.description%",
+        "modelDescription": "Build and start the selected .NET project under the C# debugger (requires the Microsoft C# extension). Breakpoints set in the editor apply. .NET projects only.",
+        "toolReferenceName": "dotpilotDebug",
+        "canBeReferencedInPrompt": true,
+        "icon": "$(debug-alt)",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "wait_seconds": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 120,
+              "description": "Seconds to wait for the server to answer before returning. Default 30. Use 0 to return immediately."
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "dotpilot_hot_reload",
+        "displayName": "%dotpilot.tool.hot_reload.name%",
+        "userDescription": "%dotpilot.tool.hot_reload.description%",
+        "modelDescription": "Run the selected .NET project with `dotnet watch` so code changes are applied on save. .NET projects only.",
+        "toolReferenceName": "dotpilotHotReload",
+        "canBeReferencedInPrompt": true,
+        "icon": "$(zap)",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "wait_seconds": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 120,
+              "description": "Seconds to wait for the server to answer before returning. Default 30. Use 0 to return immediately."
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "dotpilot_stop",
+        "displayName": "%dotpilot.tool.stop.name%",
+        "userDescription": "%dotpilot.tool.stop.description%",
+        "modelDescription": "Stop the run, hot reload, debug session or build started by DotPilot, together with its child processes and linked browser. Docker Compose projects run `docker compose down`.",
+        "toolReferenceName": "dotpilotStop",
+        "canBeReferencedInPrompt": true,
+        "icon": "$(debug-stop)",
+        "inputSchema": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "dotpilot_restart",
+        "displayName": "%dotpilot.tool.restart.name%",
+        "userDescription": "%dotpilot.tool.restart.description%",
+        "modelDescription": "Stop the current run and start it again in the same mode. Only works while something started by DotPilot is running.",
+        "toolReferenceName": "dotpilotRestart",
+        "canBeReferencedInPrompt": true,
+        "icon": "$(debug-restart)",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "wait_seconds": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 120,
+              "description": "Seconds to wait for the server to answer before returning. Default 30. Use 0 to return immediately."
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "dotpilot_build",
+        "displayName": "%dotpilot.tool.build.name%",
+        "userDescription": "%dotpilot.tool.build.description%",
+        "modelDescription": "Run a build step on the selected .NET project or solution and wait for it to finish: build, rebuild, clean, restore (NuGet), test or analyze. Returns success or failure plus the compiler errors from the Problems panel. .NET only.",
+        "toolReferenceName": "dotpilotBuild",
+        "canBeReferencedInPrompt": true,
+        "icon": "$(tools)",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "action": {
+              "type": "string",
+              "enum": [
+                "build",
+                "rebuild",
+                "clean",
+                "restore",
+                "test",
+                "analyze"
+              ],
+              "description": "Build step. Default build."
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "dotpilot_open_browser",
+        "displayName": "%dotpilot.tool.open_browser.name%",
+        "userDescription": "%dotpilot.tool.open_browser.description%",
+        "modelDescription": "Open the running app (or the selected profile URL) in the browser chosen in DotPilot.",
+        "toolReferenceName": "dotpilotOpenBrowser",
+        "canBeReferencedInPrompt": true,
+        "icon": "$(browser)",
+        "inputSchema": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "dotpilot_get_output",
+        "displayName": "%dotpilot.tool.get_output.name%",
+        "userDescription": "%dotpilot.tool.get_output.description%",
+        "modelDescription": "Return the most recent output lines of the app DotPilot started with Run or Hot Reload, for every project type: server logs, unhandled exceptions with their stack traces, build errors and the URL it listens on. A debug session writes to the VS Code Debug Console instead and is not available here. Use dotpilot_get_problems for structured compiler errors.",
+        "toolReferenceName": "dotpilotGetOutput",
+        "canBeReferencedInPrompt": true,
+        "icon": "$(output)",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "lines": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 500,
+              "description": "How many trailing lines to return. Default 80."
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "dotpilot_get_problems",
+        "displayName": "%dotpilot.tool.get_problems.name%",
+        "userDescription": "%dotpilot.tool.get_problems.description%",
+        "modelDescription": "Return the errors (and optionally warnings) currently listed in the VS Code Problems panel for files in the workspace: file, line, message. Useful after a build.",
+        "toolReferenceName": "dotpilotGetProblems",
+        "canBeReferencedInPrompt": true,
+        "icon": "$(warning)",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "include_warnings": {
+              "type": "boolean",
+              "description": "Include warnings. Default false."
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    ]
+  },
+  "devDependencies": {
+    "@vscode/test-electron": "^3.1.0",
+    "@vscode/vsce": "^4.0.0"
+  },
+  "extensionKind": [
+    "workspace"
+  ],
+  "author": {
+    "name": "Camilo Ruiz",
+    "url": "https://acrocode.dev"
+  },
+  "homepage": "https://acrocode.dev",
+  "keywords": [
+    "dotnet",
+    "csharp",
+    "aspnet",
+    "debug",
+    "run",
+    "hot-reload",
+    "node",
+    "vite",
+    "laravel",
+    "php",
+    "laragon",
+    "apache",
+    "python",
+    "django",
+    "docker",
+    "mcp",
+    "ai-agents"
+  ],
+  "icon": "media/dotpilot-icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/camiloruizx/dotpilot.git"
+  },
+  "bugs": {
+    "url": "https://github.com/camiloruizx/dotpilot/issues"
+  },
+  "galleryBanner": {
+    "color": "#181b20",
+    "theme": "dark"
+  }
+}
