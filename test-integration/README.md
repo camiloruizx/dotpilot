@@ -1,6 +1,6 @@
 # Pruebas de integración de DotPilot
 
-Corren en un **VS Code real**, con un proyecto ASP.NET real, y manejan DotPilot por sus comandos (`dotpilot.run`, `.debug`, `.watch`, …). Complementan las 83 pruebas unitarias de `npm test`, que validan la lógica sin abrir VS Code.
+Corren en un **VS Code real**, con un proyecto ASP.NET real, y manejan DotPilot por sus comandos (`dotpilot.run`, `.debug`, `.watch`, …). Complementan las pruebas unitarias de `npm test`, que validan la lógica sin abrir VS Code.
 
 ## Cómo ejecutarlas
 

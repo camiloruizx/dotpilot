@@ -39,7 +39,7 @@ Restart or reload the assistant afterwards so it loads the tools; Claude Code as
 - Off until you connect an assistant, and only you can turn it on or off: the setting lives in user settings, so a repository cannot enable it.
 - Actions that start work ask in VS Code every time (Allow / Allow for this session / Deny). Choose `allow` in `dotpilot.assistantsPermission` to stop asking. Copilot uses VS Code's own tool confirmation.
 - The bridge listens only on 127.0.0.1, requires a random token that changes on each start, and rejects requests that come from a web page.
-- Nothing is sent over the network and there is no telemetry.
+- There is no telemetry and DotPilot sends nothing over the network by itself. Only the tools you start use it: your own apps and, if you choose them, the packaging commands (`npx @vscode/vsce` may download `vsce`; `eas build` uses Expo's servers).
 
 ### New in 0.7
 
@@ -59,6 +59,25 @@ Run, Stop and Restart work the same way for all of them, **.NET included** (Run 
 
 Debugging, Hot Reload, build and tests remain .NET only and are disabled for the other types. Set `dotpilot.pythonPath` or `dotpilot.phpPath` to use a specific interpreter. Apache and other local servers are not managed; PHP uses its built-in server.
 
+### Companion APIs (.NET)
+
+If your web project calls an API that lives in another project (even in another solution or folder), you do not need a second VS Code window:
+
+1. In the panel, open **Companion APIs** (or run **DotPilot: Manage companion APIs**) and choose **Add API…**. DotPilot suggests the workspace API whose port your `appsettings*.json` calls, or you can **Browse…** for any `.csproj`.
+2. On **Run**, **Debug** or **Hot Reload**, DotPilot starts each API in its own terminal (`API <name>`), waits until it listens (up to 90 s), then starts your project. **Stop** ends both; if your project exits on its own, the APIs are stopped too.
+3. An API that is already listening on its port is reused and left running.
+
+The first time you run a project whose `appsettings*.json` points to a `localhost` address that is not its own, DotPilot asks once whether to add that API. With **Debug**, only the main project is debugged; the API runs without the debugger.
+
+### Packaging: VSIX and Android APK
+
+DotPilot shows a packaging button in **Tools** (and a command in the palette) when the selected project supports it:
+
+- **VS Code extension** (`engines.vscode` in `package.json`) → **Package VSIX**. It runs the project's `package` script if it has one, otherwise `npx @vscode/vsce package`. When it ends you can **Reveal in folder** or **Install in VS Code** (then reload the window). Bumping the version stays in your hands (`npm version`).
+- **Expo project** (`expo` dependency) → **Build APK**. If `eas.json` has a profile with `android.buildType: "apk"` it can run **EAS Build** in the cloud (`eas build --platform android --profile <profile> --non-interactive`; sign in first with `eas login`; EAS builds cannot run locally on Windows). If the `android/` folder exists it can run a **local Gradle** build (`gradlew assembleRelease`, needs a JDK and the Android SDK; `ANDROID_HOME` is taken from the standard Android Studio location when unset). When both are possible DotPilot asks and remembers the last choice. EAS builds finish with a download link you can open or copy; local builds produce `android/app/build/outputs/apk/release/app-release.apk`.
+
+Stop cancels the packaging, and the output stays in a DotPilot terminal.
+
 ### New in 0.6
 
 Choose **Web browser** directly below the launch profile, or open **DotPilot → Web browser** in the editor toolbar. Pick Google Chrome, Microsoft Edge or System default; a check mark shows the effective choice. DotPilot remembers it for each startup project. **Use workspace settings** clears that project's choice and uses the existing browser setting. Changing it while the app is running reopens the app in the chosen browser right away (the app keeps running). With nothing running, **Open in browser** launches the chosen browser instead of the system default. Edge/Chrome must be installed; System default uses the operating system handler and cannot track tab closure.
@@ -69,7 +88,7 @@ Run, debug and build .NET projects from a dedicated **DotPilot menu** and a rede
 
 ### Install and start
 
-1. In VS Code, choose **Extensions → … → Install from VSIX…** and select **dotpilot-0.9.0.vsix**. For versions 0.3.0 and earlier, uninstall the old local-dotnet-tools extension first to avoid duplicates.
+1. In VS Code, choose **Extensions → … → Install from VSIX…** and select **dotpilot-1.0.0.vsix**. For versions 0.3.0 and earlier, uninstall the old local-dotnet-tools extension first to avoid duplicates.
 2. Reload the window if requested. Open a trusted folder with a .NET SDK project and select your startup project, launch profile, configuration and framework in the DotPilot Explorer view.
 3. Choose **Run**, **Debug** or **Hot Reload**. Debugging requires Microsoft's C# extension; .NET SDK 8+ and VS Code 1.85+ are required. C# Dev Kit is optional.
 
@@ -125,7 +144,7 @@ Después reinicia o recarga el asistente para que cargue las herramientas; Claud
 - Está apagado hasta que conectes un asistente y solo tú puedes activarlo o desactivarlo: el ajuste vive en la configuración de usuario, así que un repositorio no puede activarlo.
 - Las acciones que inician trabajo preguntan en VS Code cada vez (Permitir / Permitir en esta sesión / Rechazar). Elige `allow` en `dotpilot.assistantsPermission` para dejar de preguntar. Copilot usa la confirmación propia de VS Code.
 - El puente escucha solo en 127.0.0.1, exige un token aleatorio que cambia en cada inicio y rechaza solicitudes que vengan de una página web.
-- No se envía nada por red y no hay telemetría.
+- No hay telemetría y DotPilot no envía nada por red por sí mismo. Solo la usan las herramientas que tú inicias: tus aplicaciones y, si los eliges, los comandos de empaquetado (`npx @vscode/vsce` puede descargar `vsce`; `eas build` usa los servidores de Expo).
 
 ### Nuevo en 0.7
 
@@ -145,6 +164,25 @@ Ejecutar, Detener y Reiniciar funcionan igual en todos. La salida aparece en una
 
 Depurar, Hot Reload, compilar y pruebas siguen siendo solo de .NET y se desactivan para los otros tipos. Usa `dotpilot.pythonPath` o `dotpilot.phpPath` para elegir un intérprete. No administra Apache ni otros servidores locales; PHP usa su servidor integrado.
 
+### APIs complementarias (.NET)
+
+Si tu proyecto web consume una API que vive en otro proyecto (incluso en otra solución o carpeta), no necesitas una segunda ventana de VS Code:
+
+1. En el panel abre **APIs complementarias** (o ejecuta **DotPilot: Administrar APIs complementarias**) y elige **Agregar API…**. DotPilot sugiere la API del espacio de trabajo cuyo puerto llama tu `appsettings*.json`, o puedes **Examinar…** cualquier `.csproj`.
+2. Al **Ejecutar**, **Depurar** o usar **Hot Reload**, DotPilot inicia cada API en su propia terminal (`API <nombre>`), espera a que escuche (hasta 90 s) y luego inicia tu proyecto. **Detener** cierra ambos; si tu proyecto termina por sí solo, las APIs también se detienen.
+3. Una API que ya está escuchando en su puerto se reutiliza y no se cierra.
+
+La primera vez que ejecutas un proyecto cuyo `appsettings*.json` apunta a una dirección `localhost` que no es suya, DotPilot pregunta una vez si quieres agregar esa API. Con **Depurar**, solo se depura el proyecto principal; la API corre sin depurador.
+
+### Empaquetado: VSIX y APK de Android
+
+DotPilot muestra un botón de empaquetado en **Herramientas** (y un comando en la paleta) cuando el proyecto seleccionado lo admite:
+
+- **Extensión de VS Code** (`engines.vscode` en `package.json`) → **Empaquetar VSIX**. Ejecuta el script `package` del proyecto si lo tiene; si no, `npx @vscode/vsce package`. Al terminar puedes **Mostrar en carpeta** o **Instalar en VS Code** (y luego recargar la ventana). Subir la versión sigue en tus manos (`npm version`).
+- **Proyecto Expo** (dependencia `expo`) → **Generar APK**. Si `eas.json` tiene un perfil con `android.buildType: "apk"` puede usar **EAS Build** en la nube (`eas build --platform android --profile <perfil> --non-interactive`; inicia sesión antes con `eas login`; EAS no compila localmente en Windows). Si existe la carpeta `android/` puede hacer una compilación **local con Gradle** (`gradlew assembleRelease`; requiere JDK y el SDK de Android, y toma `ANDROID_HOME` de la ruta estándar de Android Studio si no está definida). Cuando ambas son posibles DotPilot pregunta y recuerda la última elección. EAS termina con un enlace de descarga que puedes abrir o copiar; la local deja `android/app/build/outputs/apk/release/app-release.apk`.
+
+Detener cancela el empaquetado, y la salida queda en una terminal de DotPilot.
+
 ### Nuevo en 0.6
 
 Selecciona **Navegador web** debajo del perfil, o abre **DotPilot → Navegador web** en la barra del editor. Elige Google Chrome, Microsoft Edge o Predeterminado del sistema; una marca indica la elección activa. Se recuerda por proyecto de inicio. **Usar ajustes del espacio de trabajo** elimina la elección específica y vuelve al ajuste de navegador existente. Cambiarla con la aplicación en ejecución la reabre de inmediato en el navegador elegido (la aplicación sigue corriendo). Sin nada en ejecución, **Navegador** abre el navegador elegido y no el predeterminado del sistema. Edge/Chrome deben estar instalados; el navegador del sistema no permite detectar el cierre de su pestaña.
@@ -161,7 +199,7 @@ Controles en inglés y español para trabajar con proyectos .NET desde un menú 
 1. En VS Code abre **Extensiones** (`Ctrl+Shift+X`).
 2. Abre el menú `…` y elige **Instalar desde VSIX…**.
 3. Si tienes DotPilot 0.3.0 o anterior, desinstálalo y recarga VS Code primero: el publicador cambió de `local-dotnet-tools` a `camiloruizx`, por lo que el editor los considera extensiones distintas. Tendrás que volver a seleccionar tu proyecto y perfil.
-4. Selecciona **dotpilot-0.9.0.vsix**. La ficha mostrará `camiloruizx` como publicador local; este identificador todavía no implica una publicación en Marketplace.
+4. Selecciona **dotpilot-1.0.0.vsix**. La ficha mostrará `camiloruizx` como publicador local; este identificador todavía no implica una publicación en Marketplace.
 5. Recarga la ventana si se solicita. Abre tu solución y el panel **DotPilot** en el Explorador.
 6. Selecciona proyecto, perfil —por ejemplo `https`—, configuración y framework. Usa **Depurar**, **Ejecutar** o **Hot Reload**.
 

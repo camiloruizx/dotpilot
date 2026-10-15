@@ -73,8 +73,11 @@ module.exports = ({ vscode, path, DOTNET_ONLY, LABELS, BROWSERS, ACTIONS, browse
     const enabled = ['showOutput', 'showProblems', 'editProfile', 'advancedSettings', 'selectBrowser', 'connectAssistants'];
     if (!this.busy) enabled.push('refresh');
     if (!this.busy && dotnet) enabled.push('selectTarget', 'buildMenu', ...Object.keys(LABELS));
-    if (!this.busy && !active) enabled.push('selectProject', 'selectProfile', 'run');
-    if (!this.busy && !active && dotnet) enabled.push('selectConfiguration', 'selectFramework', 'debug', 'watch', 'diagnostics');
+    if (!this.busy && !active) enabled.push('selectProject', 'selectProfile');
+    if (!this.busy && !active && (!this.app || this.app.profiles.length)) enabled.push('run');
+    const packaging = this.app?.packaging?.kind || '';
+    if (!this.busy && !active && packaging) enabled.push(packaging === 'vsix' ? 'packageVsix' : 'packageApk');
+    if (!this.busy && !active && dotnet) enabled.push('selectConfiguration', 'selectFramework', 'manageCompanions', 'debug', 'watch', 'diagnostics');
     if (active || this.busy || this.tasks.size) enabled.push('stop');
     if (active && !this.busy) enabled.push('restart');
     if (this.session) enabled.push('pause');
@@ -101,7 +104,8 @@ module.exports = ({ vscode, path, DOTNET_ONLY, LABELS, BROWSERS, ACTIONS, browse
       }
     }
     if (!this.view?.visible || !this.webviewReady) return;
-    const state = { type: 'state', language: this.language(), browser: this.t(BROWSERS[this.browser()]), settings: { ...readSettings(this.config(), vscode.workspace.getConfiguration('dotpilot')), browser: this.browser() }, workspaceSettings: !!vscode.workspace.workspaceFolders?.length, project, isApp: !dotnet, kind: this.app ? this.app.framework : '.NET', address, assistants: !!this.bridge?.port, profile: this.profileLabel(), configuration: this.configuration, framework: this.selectedFramework || this.t('Automático'), target: this.target ? path.basename(this.target.fsPath) : this.t('Seleccionar destino'), status, path: this.project ? vscode.workspace.asRelativePath(this.project) : '', result: this.result, error: this.resultError, active, paused: this.paused, debugging: !!this.session, hasProjects, enabled };
+    const companions = this.companionList().map(entry => require('../companions').companionName(entry.project)).join(', ') || this.t('Ninguna');
+    const state = { type: 'state', language: this.language(), browser: this.t(BROWSERS[this.browser()]), settings: { ...readSettings(this.config(), vscode.workspace.getConfiguration('dotpilot')), browser: this.browser() }, workspaceSettings: !!vscode.workspace.workspaceFolders?.length, project, isApp: !dotnet, kind: this.app ? this.app.framework : '.NET', companions, packaging, address, assistants: !!this.bridge?.port, profile: this.profileLabel(), configuration: this.configuration, framework: this.selectedFramework || this.t('Automático'), target: this.target ? path.basename(this.target.fsPath) : this.t('Seleccionar destino'), status, path: this.project ? vscode.workspace.asRelativePath(this.project) : '', result: this.result, error: this.resultError, active, paused: this.paused, debugging: !!this.session, hasProjects, enabled };
     const signature = JSON.stringify(state);
     if (signature === this.lastViewState && this.viewLanguage === state.language) return;
     this.lastViewState = signature;

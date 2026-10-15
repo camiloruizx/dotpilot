@@ -14,11 +14,11 @@ const EXCLUDE = '**/{bin,obj,node_modules,.git}/**';
 const EXCLUDE_APPS = '**/{bin,obj,node_modules,.git,vendor,.venv,venv,__pycache__,.next,.nuxt}/**';
 const NOISE = /[\\/](?:node_modules|\.git|vendor|\.venv|venv|__pycache__)[\\/]/;
 // Acciones que solo tienen sentido con un proyecto .NET seleccionado.
-const DOTNET_ONLY = new Set(['debug', 'watch', 'selectConfiguration', 'selectFramework', 'selectTarget', 'diagnostics', 'buildMenu', 'build', 'rebuild', 'clean', 'restore', 'test', 'analyze']);
+const DOTNET_ONLY = new Set(['manageCompanions', 'debug', 'watch', 'selectConfiguration', 'selectFramework', 'selectTarget', 'diagnostics', 'buildMenu', 'build', 'rebuild', 'clean', 'restore', 'test', 'analyze']);
 const LABELS = { build: 'Compilar', rebuild: 'Recompilar', clean: 'Limpiar', restore: 'Restaurar NuGet', test: 'Ejecutar pruebas', analyze: 'Analizar código' };
 const BROWSERS = { edge: 'Microsoft Edge', chrome: 'Google Chrome', external: 'Predeterminado del sistema' };
 const ACTIONS = ['run', 'debug', 'watch', 'showPanel', 'hidePanel', 'showSettings', 'advancedSettings', 'continue', 'pause', 'stop', 'restart', ...Object.keys(LABELS), 'selectProject', 'selectProfile', 'selectConfiguration', 'selectFramework', 'selectTarget', 'refresh', 'buildMenu', 'openBrowser', 'editProfile', 'showOutput', 'showProblems', 'diagnostics', 'stepOver', 'stepInto', 'stepOut'];
-ACTIONS.push('selectBrowser', 'browserEdge', 'browserChrome', 'browserExternal', 'browserDefault', 'connectAssistants');
+ACTIONS.push('selectBrowser', 'browserEdge', 'browserChrome', 'browserExternal', 'browserDefault', 'connectAssistants', 'manageCompanions', 'packageVsix', 'packageApk');
 class CancelledOperation extends Error { constructor() { super('Operation stopped.'); } }
 
 function portIsOpen(endpoint) {
@@ -39,6 +39,7 @@ class Controller {
     this.apps = [];
     this.app = undefined;
     this.appProcess = undefined;
+    this.companions = [];
     this.listeningUrl = undefined;
     this.occupiedAtLaunch = false;
     this.refreshing = undefined;
@@ -84,12 +85,13 @@ class Controller {
 
   // Listen before starting the task, so even a fast process cannot escape tracking.
   // `terminal` es un Pseudoterminal propio (proyectos que no son .NET); sin él se ejecuta `dotnet`.
-  async executeTask(label, args, target, running = false, terminal = undefined) {
+  // `secondary`: tarea en ejecución que acompaña al proyecto principal (una API); no es `runTask`.
+  async executeTask(label, args, target, running = false, terminal = undefined, secondary = false) {
     const id = randomBytes(16).toString('hex');
     const execution = terminal ? new vscode.CustomExecution(async () => terminal)
       : new vscode.ProcessExecution(this.config().get('dotnetPath', 'dotnet'), args, { cwd: path.dirname(target.fsPath), env: { DOTNET_WATCH_SUPPRESS_LAUNCH_BROWSER: '1' } });
     const task = new vscode.Task({ type: 'dotpilot', operation: label, id }, this.folder(), label, 'DotPilot', execution, terminal ? terminal.matcher : '$msCompile');
-    task.presentationOptions = { reveal: vscode.TaskRevealKind.Always, panel: vscode.TaskPanelKind.Shared, clear: true };
+    task.presentationOptions = { reveal: vscode.TaskRevealKind.Always, panel: secondary ? vscode.TaskPanelKind.Dedicated : vscode.TaskPanelKind.Shared, clear: true };
     if (!running) task.group = args[0] === 'test' ? vscode.TaskGroup.Test : vscode.TaskGroup.Build;
     const generation = this.generation;
     let finish;
@@ -120,6 +122,8 @@ class Controller {
       if (this.runTask === event.execution) {
         this.runTask = undefined; this.cancelBrowserMonitor();
         void this.closeBrowser().catch(error => this.output.appendLine(error.message));
+        // Si el proyecto principal termina por sí mismo, sus APIs no quedan huérfanas.
+        if (generation === this.generation) void this.stopCompanions();
       }
       setTimeout(() => { finish(exitCode); started(); startListener.dispose(); processListener.dispose(); endListener.dispose(); this.render(); }, 0);
     });
@@ -127,7 +131,7 @@ class Controller {
       const execution = await vscode.tasks.executeTask(task);
       if (!ended) {
         this.tasks.add(execution);
-        if (running) this.runTask = execution;
+        if (running && !secondary) this.runTask = execution;
       }
       this.render();
     } catch (error) {
@@ -154,6 +158,21 @@ class Controller {
     if (this.app) return this.launchApp(mode, generation);
     const framework = await this.framework();
     if (!framework || cancelled()) return;
+    // APIs complementarias: se inician (y se espera a que escuchen) antes del proyecto principal.
+    await this.offerCompanions(generation);
+    if (cancelled()) return;
+    try {
+      await this.startCompanions(generation);
+      if (cancelled()) return;
+      await this.launchDotnet(mode, framework, generation);
+    } catch (error) {
+      await this.stopCompanions();
+      throw error;
+    }
+  }
+
+  async launchDotnet(mode, framework, generation) {
+    const cancelled = () => generation !== this.generation;
     this.lastMode = mode;
     this.runningBrowser = this.browser();
     this.browserOpened = false;
@@ -211,7 +230,7 @@ class Controller {
     this.listeningUrl = undefined;
     const session = this.session;
     const tasks = [...this.tasks];
-    const pending = [this.closeBrowser()];
+    const pending = [this.closeBrowser(), this.stopCompanions()];
     if (this.appProcess && !this.appProcess.exited) pending.push(this.appProcess.stop());
     if (session) pending.push(new Promise((resolve, reject) => {
       const timer = setTimeout(() => { listener.dispose(); reject(new Error(this.t('El depurador no terminó a tiempo.'))); }, 10000);
@@ -262,6 +281,8 @@ class Controller {
       else if (action === 'selectConfiguration') await this.selectConfiguration();
       else if (action === 'selectFramework') { if (await this.ensureProject()) { if (this.active()) throw new Error(this.t('Detén la ejecución antes de cambiar el framework.')); await this.framework(true); } }
       else if (action === 'selectTarget') await this.selectTarget();
+      else if (action === 'manageCompanions') await this.manageCompanions();
+      else if (action === 'packageVsix' || action === 'packageApk') await this.packageProject(action);
       else if (action === 'editProfile') await this.editProfile();
       else if (action === 'diagnostics') { if (await this.ensureProject()) await this.executeTask(this.t('Información del SDK .NET'), ['--info'], this.project); }
       else if (action === 'refresh') await this.refresh(true);
@@ -282,13 +303,13 @@ class Controller {
     }
   }
 
-  dispose() { void this.bridge?.dispose().catch(() => {}); this.bridge = undefined; if (this.appProcess && !this.appProcess.exited) void this.appProcess.stop(); this.cancelBrowserMonitor(); this.generation++; this.queryProcess?.kill(); for (const execution of this.tasks) execution.terminate(); void this.closeBrowser().catch(() => {}); }
+  dispose() { void this.bridge?.dispose().catch(() => {}); this.bridge = undefined; if (this.appProcess && !this.appProcess.exited) void this.appProcess.stop(); void this.stopCompanions(); this.cancelBrowserMonitor(); this.generation++; this.queryProcess?.kill(); for (const execution of this.tasks) execution.terminate(); void this.closeBrowser().catch(() => {}); }
 }
 
 // Responsabilidades del Controller repartidas por módulo (src/controller). Se mezclan en el prototipo.
 const deps = { vscode, path, fs, os, randomBytes, execFile, portIsOpen, CancelledOperation, EXCLUDE, EXCLUDE_APPS, NOISE, DOTNET_ONLY, LABELS, BROWSERS, ACTIONS,
   profilesFrom, buildArgs, runArgs, browserUrl, localEndpoint, resolveLanguage, translate, languageMismatch, fields, validSetting, readSettings };
-for (const name of ['browser', 'projects', 'managed', 'assistants', 'dotnet', 'panel']) Object.assign(Controller.prototype, require('./controller/' + name)(deps));
+for (const name of ['browser', 'projects', 'managed', 'companions', 'packaging', 'assistants', 'dotnet', 'panel']) Object.assign(Controller.prototype, require('./controller/' + name)(deps));
 
 function activate(context) {
   const controller = new Controller(context);
@@ -307,6 +328,7 @@ function activate(context) {
     controller.browserTerminated(session);
     if (controller.session?.id === session.id) {
       controller.session = undefined; controller.paused = false; controller.stoppedThread = undefined; controller.render();
+      void controller.stopCompanions();
       void controller.closeBrowser().catch(error => controller.output.appendLine(error.message));
     }
   }));

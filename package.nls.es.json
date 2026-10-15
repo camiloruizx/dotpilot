@@ -81,5 +81,8 @@
   "dotpilot.connectAssistants": "Conectar asistentes de IA",
   "dotpilot.assistantsEnabled.description": "Permite que los asistentes de IA (Claude Code, Codex, Gemini, Copilot) usen DotPilot mediante un puente local que solo escucha en este equipo.",
   "dotpilot.assistantsPermission.description": "ask: confirma cada vez que un asistente ejecuta, reinicia o compila. allow: ejecuta sin preguntar.",
-  "dotpilot.laragonPath.description": "Carpeta de instalación de Laragon (por ejemplo C:\\laragon). Vacío la detecta desde el proyecto o rutas habituales."
+  "dotpilot.laragonPath.description": "Carpeta de instalación de Laragon (por ejemplo C:\\laragon). Vacío la detecta desde el proyecto o rutas habituales.",
+  "dotpilot.manageCompanions": "Administrar APIs complementarias",
+  "dotpilot.packageVsix": "Empaquetar extensión de VS Code (VSIX)",
+  "dotpilot.packageApk": "Generar APK de Android (Expo)"
 }

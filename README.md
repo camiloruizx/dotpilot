@@ -15,6 +15,8 @@ DotPilot detects the runnable projects in your workspace, lets you pick a projec
 - **Reads the server URL and port from the server's own output**, so it follows the server when it moves to another port. The address is a link in the panel.
 - **Linked browser:** Edge or Chrome open with a temporary profile and close the app when you close the window. Choose the browser per project; changing it while the app runs reopens it in the new one.
 - **.NET extras:** debugging with the C# debugger, Hot Reload, build, rebuild, clean, restore, test and analyze, with launch profiles from `launchSettings.json`.
+- **Companion APIs (.NET):** a web project can start its API (even from another solution or folder) together with it: DotPilot starts the API first, waits until it listens, then runs your project, and Stop ends both.
+- **Packaging:** **Package VSIX** for VS Code extensions (uses the project's `package` script or `vsce`) and **Build APK** for Expo projects (EAS Build in the cloud or local Gradle). When it finishes you can reveal the file, install the VSIX, or open/copy the APK link.
 - **Apache (Laragon) profile for PHP on Windows:** runs Laragon's own Apache with its own configuration (virtual hosts, `.htaccess`, modules) instead of `php -S`.
 - **AI assistants can use it** through a local MCP server and VS Code language model tools.
 
@@ -102,7 +104,7 @@ Menus and the command palette follow VS Code's display language; the panel and m
 
 ## What DotPilot does on your machine
 
-- **No telemetry** and no network calls. Everything is local.
+- **No telemetry.** DotPilot itself makes no network calls. Only tools you start can use the network: your own apps, and the optional packaging commands (`npx @vscode/vsce` may download `vsce`; `eas build` talks to Expo's servers).
 - **Processes:** only the projects and profiles it detected, started on your request. Stop ends them.
 - **Ports:** the ones your apps use. With AI assistants enabled, one random port on `127.0.0.1` for the bridge.
 - **Files:** a temporary browser profile while a linked window is open (deleted afterwards); with AI assistants enabled, `~/.dotpilot` (a copy of the MCP server and a discovery file with the bridge's token); on Windows with Laragon, a console log in the temp folder. It never edits your projects, `launch.json` or `tasks.json`. **Connect AI assistants** writes only the files listed above, after you choose them.

@@ -84,6 +84,71 @@ const tests = [
     }
   },
   {
+    name: 'API complementaria: se inicia antes que el proyecto, ambos responden y Detener libera los dos',
+    timeout: 240000,
+    fn: async () => {
+      const controller = await getController();
+      const PORT_API = 5191;
+      assert.equal(await portOpen(PORT_API), false, 'el puerto 5191 ya estaba ocupado antes de la prueba');
+      // La API vive fuera del espacio de trabajo, como en un caso real con dos soluciones.
+      const api = fs.mkdtempSync(path.join(require('node:os').tmpdir(), 'dotpilot-api-'));
+      fs.mkdirSync(path.join(api, 'Properties'));
+      fs.writeFileSync(path.join(api, 'ApiSample.csproj'), fs.readFileSync(path.join(fixtureDir, 'WebSample.csproj'), 'utf8'));
+      fs.writeFileSync(path.join(api, 'Program.cs'), ['var app = WebApplication.CreateBuilder(args).Build();', 'app.MapGet("/", () => "dotpilot-api");', 'app.Run();'].join(String.fromCharCode(10)));
+      fs.writeFileSync(path.join(api, 'Properties', 'launchSettings.json'), JSON.stringify({ profiles: { http: { commandName: 'Project', launchBrowser: false, applicationUrl: `http://localhost:${PORT_API}` } } }));
+      try {
+        await controller.saveCompanions([{ project: path.join(api, 'ApiSample.csproj'), profile: 'http' }]);
+        await vscode.commands.executeCommand('dotpilot.run');
+        await waitFor(() => portOpen(PORT_API), { timeout: 120000, message: 'que la API escuche en 5191' });
+        await waitFor(() => portOpen(PORT_HTTP), { timeout: 120000, message: 'que el proyecto escuche en 5187' });
+        assert.equal((await httpGet(`http://127.0.0.1:${PORT_API}/`)).body, 'dotpilot-api');
+        assert.equal((await httpGet(home)).body, 'dotpilot-v1');
+        assert.equal(controller.companions.length, 1);
+        await vscode.commands.executeCommand('dotpilot.stop');
+        await waitFor(async () => !(await portOpen(PORT_API)) && !(await portOpen(PORT_HTTP)), { timeout: 30000, message: 'que se liberen 5191 y 5187' });
+        assert.equal(controller.active(), false);
+        assert.equal(controller.companions.length, 0);
+      } finally {
+        await controller.saveCompanions([]);
+        fs.rmSync(api, { recursive: true, force: true, maxRetries: 8, retryDelay: 250 });
+      }
+    }
+  },
+  {
+    name: 'API complementaria con depuración: la API corre sin depurador y Detener libera los dos',
+    skip: () => (hasCSharp() ? false : 'falta la extensión C# (ms-dotnettools.csharp)'),
+    timeout: 240000,
+    fn: async () => {
+      const controller = await getController();
+      const PORT_API = 5191;
+      assert.equal(await portOpen(PORT_API), false, 'el puerto 5191 ya estaba ocupado antes de la prueba');
+      // La API vive fuera del espacio de trabajo, como en un caso real con dos soluciones.
+      const api = fs.mkdtempSync(path.join(require('node:os').tmpdir(), 'dotpilot-api-'));
+      fs.mkdirSync(path.join(api, 'Properties'));
+      fs.writeFileSync(path.join(api, 'ApiSample.csproj'), fs.readFileSync(path.join(fixtureDir, 'WebSample.csproj'), 'utf8'));
+      fs.writeFileSync(path.join(api, 'Program.cs'), ['var app = WebApplication.CreateBuilder(args).Build();', 'app.MapGet("/", () => "dotpilot-api");', 'app.Run();'].join(String.fromCharCode(10)));
+      fs.writeFileSync(path.join(api, 'Properties', 'launchSettings.json'), JSON.stringify({ profiles: { http: { commandName: 'Project', launchBrowser: false, applicationUrl: `http://localhost:${PORT_API}` } } }));
+      try {
+        await controller.saveCompanions([{ project: path.join(api, 'ApiSample.csproj'), profile: 'http' }]);
+        await vscode.commands.executeCommand('dotpilot.debug');
+        await waitFor(() => controller.session, { timeout: 120000, message: 'que inicie la sesión de depuración' });
+        await waitFor(() => portOpen(PORT_API), { timeout: 120000, message: 'que la API escuche en 5191' });
+        await waitFor(() => portOpen(PORT_HTTP), { timeout: 120000, message: 'que el proyecto escuche en 5187' });
+        assert.equal((await httpGet(`http://127.0.0.1:${PORT_API}/`)).body, 'dotpilot-api');
+        assert.equal((await httpGet(home)).body, 'dotpilot-v1');
+        assert.equal(controller.companions.length, 1);
+        await vscode.commands.executeCommand('dotpilot.stop');
+        await waitFor(async () => !(await portOpen(PORT_API)) && !(await portOpen(PORT_HTTP)), { timeout: 30000, message: 'que se liberen 5191 y 5187' });
+        assert.equal(controller.active(), false);
+        assert.equal(controller.companions.length, 0);
+        assert.equal(controller.session, undefined);
+      } finally {
+        await controller.saveCompanions([]);
+        fs.rmSync(api, { recursive: true, force: true, maxRetries: 8, retryDelay: 250 });
+      }
+    }
+  },
+  {
     name: 'depurar: sesión coreclr, pausar congela la app, continuar la reanuda y Detener termina',
     skip: () => (hasCSharp() ? false : 'falta la extensión C# (ms-dotnettools.csharp)'),
     timeout: 240000,
@@ -519,7 +584,38 @@ const tests = [
         await controller.refresh();
       }
     }
-  }
+  },
+  {
+    name: 'empaquetar VSIX: detecta la extensión de VS Code, ejecuta su script y deja el resultado en el panel',
+    timeout: 120000,
+    fn: async () => {
+      const controller = await getController();
+      const dir = path.join(path.dirname(fixtureDir), 'VsixSample');
+      fs.mkdirSync(dir, { recursive: true });
+      fs.writeFileSync(path.join(dir, 'package.json'), JSON.stringify({ name: 'vsix-sample', version: '1.0.0', engines: { vscode: '^1.85.0' }, scripts: { package: 'node pack.js' } }));
+      fs.writeFileSync(path.join(dir, 'pack.js'), "require('node:fs').writeFileSync('vsix-sample-1.0.0.vsix', 'x'); console.log('DONE  Packaged: vsix-sample-1.0.0.vsix (1 files, 1 KB)');");
+      const original = controller.project;
+      try {
+        await waitFor(async () => { await controller.refresh(); return controller.apps.some(app => app.packaging?.kind === 'vsix'); }, { message: 'que se detecte la extensión de VS Code' });
+        const app = controller.apps.find(item => item.packaging?.kind === 'vsix');
+        assert.equal(app.framework, 'VS Code Extension');
+        await controller.applyProject(app.uri, app);
+        await vscode.commands.executeCommand('dotpilot.packageVsix');
+        await waitFor(() => fs.existsSync(path.join(dir, 'vsix-sample-1.0.0.vsix')), { timeout: 60000, message: 'que se genere el .vsix' });
+        await waitFor(() => !controller.busy, { timeout: 30000, message: 'que termine el empaquetado' });
+        assert.equal(controller.resultError, false, controller.result);
+        assert.ok(controller.result.endsWith('vsix-sample-1.0.0.vsix'), controller.result);
+        // Un proyecto .NET rechaza la acción con un mensaje claro.
+        await controller.applyProject(original, undefined);
+        await vscode.commands.executeCommand('dotpilot.packageVsix');
+        assert.equal(controller.resultError, true);
+      } finally {
+        fs.rmSync(dir, { recursive: true, force: true, maxRetries: 8, retryDelay: 250 });
+        await controller.refresh();
+        if (original && controller.project?.toString() !== original.toString()) await controller.applyProject(original, undefined);
+      }
+    }
+  },
 ];
 
 module.exports = tests;

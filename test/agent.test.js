@@ -227,7 +227,7 @@ function harness({ permission = 'ask', answer } = {}) {
     config: () => ({ get: (key, fallback) => (key === 'assistantsPermission' ? permission : fallback) }),
     t: (message, ...values) => message.replace(/\{(\d+)\}/g, (_, i) => values[i]),
     active() { return !!(this.runTask || this.session); }, browser: () => 'edge', projectName() { return this.app ? 'web' : 'Api.csproj'; },
-    async refresh() {}, async loadProfiles() {},
+    async refresh() {}, async loadProfiles() {}, companionList: () => [],
     async applyProject(u, app) { this.project = u; this.app = app; this.profiles = app ? app.profiles : [{ name: 'http', url: 'http://localhost:5000' }]; this.profile = this.profiles[0].name; },
     async applyProfile(name) { this.profile = name; },
     async invoke(action) { calls.push(action); if (action === 'run') this.runTask = {}; if (action === 'stop') this.runTask = undefined; }

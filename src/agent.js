@@ -77,6 +77,7 @@ class AgentApi {
       projectType: c.project ? (c.app ? c.app.framework : '.NET') : null,
       profile: c.project ? (c.profile || null) : null,
       url: c.listeningUrl || this.deps.browserUrl(profile) || null,
+      companionApis: c.companionList().map(entry => path.basename(entry.project)),
       browser: c.browser(),
       lastResult: c.result || null,
       lastResultIsError: !!c.resultError

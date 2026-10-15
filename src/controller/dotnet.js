@@ -15,12 +15,12 @@ module.exports = ({ vscode, path, execFile, CancelledOperation, LABELS, buildArg
     vscode.window.setStatusBarMessage('DotPilot: ' + this.t('{0} completado', this.t(LABELS[action])), 4000);
   },
 
-  queryProperties(framework, properties) {
+  queryProperties(framework, properties, project = this.project.fsPath) {
     const generation = this.generation;
     return new Promise((resolve, reject) => {
-      const args = ['msbuild', this.project.fsPath, '-nologo', `-getProperty:${properties.join(',')}`, `-p:Configuration=${this.configuration}`];
+      const args = ['msbuild', project, '-nologo', `-getProperty:${properties.join(',')}`, `-p:Configuration=${this.configuration}`];
       if (framework) args.push(`-p:TargetFramework=${framework}`);
-      const child = execFile(this.config().get('dotnetPath', 'dotnet'), args, { cwd: path.dirname(this.project.fsPath), timeout: 30000, maxBuffer: 4 * 1024 * 1024, windowsHide: true }, (error, stdout, stderr) => {
+      const child = execFile(this.config().get('dotnetPath', 'dotnet'), args, { cwd: path.dirname(project), timeout: 30000, maxBuffer: 4 * 1024 * 1024, windowsHide: true }, (error, stdout, stderr) => {
         if (this.queryProcess === child) this.queryProcess = undefined;
         if (generation !== this.generation) { reject(new CancelledOperation()); return; }
         if (error) {

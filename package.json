@@ -2,7 +2,7 @@
   "name": "dotpilot",
   "displayName": "DotPilot",
   "description": "%extension.description%",
-  "version": "0.9.0",
+  "version": "1.0.0",
   "publisher": "camiloruizx",
   "engines": {
     "vscode": "^1.85.0"
@@ -29,7 +29,7 @@
   "scripts": {
     "test": "node --test test/*.test.js",
     "test:integration": "node test-integration/run.js",
-    "package": "vsce package --allow-missing-repository --out ../dotpilot-0.9.0.vsix",
+    "package": "vsce package --allow-missing-repository --out ../",
     "test:assistant": "node test-integration/real-assistant.js",
     "test:assistant:codex": "node test-integration/real-assistant-cli.js codex",
     "test:assistant:gemini": "node test-integration/real-assistant-cli.js gemini",
@@ -224,6 +224,24 @@
         "icon": "$(settings-gear)"
       },
       {
+        "command": "dotpilot.packageVsix",
+        "title": "%dotpilot.packageVsix%",
+        "category": "DotPilot",
+        "enablement": "!dotpilot.busy && !dotpilot.active"
+      },
+      {
+        "command": "dotpilot.packageApk",
+        "title": "%dotpilot.packageApk%",
+        "category": "DotPilot",
+        "enablement": "!dotpilot.busy && !dotpilot.active"
+      },
+      {
+        "command": "dotpilot.manageCompanions",
+        "title": "%dotpilot.manageCompanions%",
+        "category": "DotPilot",
+        "enablement": "!dotpilot.busy && !dotpilot.active && dotpilot.dotnet"
+      },
+      {
         "command": "dotpilot.selectBrowser",
         "title": "%dotpilot.selectBrowser%",
         "category": "DotPilot"
@@ -405,6 +423,10 @@
         {
           "command": "dotpilot.selectBrowser",
           "group": "dotpilot@4"
+        },
+        {
+          "command": "dotpilot.manageCompanions",
+          "group": "dotpilot@6"
         }
       ],
       "dotpilot.compile": [

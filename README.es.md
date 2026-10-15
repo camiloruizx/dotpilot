@@ -15,6 +15,8 @@ DotPilot detecta los proyectos ejecutables de tu espacio de trabajo, te deja ele
 - **Lee la URL y el puerto de la salida del propio servidor**, así que lo sigue si cambia de puerto. La dirección es un enlace en el panel.
 - **Navegador vinculado:** Edge o Chrome con un perfil temporal; al cerrar la ventana se detiene la aplicación. El navegador se elige por proyecto y, si lo cambias con la app en ejecución, se reabre en el nuevo.
 - **Extras de .NET:** depuración con el depurador de C#, Hot Reload, compilar, recompilar, limpiar, restaurar, probar y analizar, con los perfiles de `launchSettings.json`.
+- **APIs complementarias (.NET):** un proyecto web puede iniciar su API (incluso de otra solución o carpeta) junto con él: DotPilot inicia primero la API, espera a que escuche, luego ejecuta tu proyecto, y Detener cierra ambos.
+- **Empaquetado:** **Empaquetar VSIX** para extensiones de VS Code (usa el script `package` del proyecto o `vsce`) y **Generar APK** para proyectos Expo (EAS Build en la nube o Gradle local). Al terminar puedes mostrar el archivo, instalar el VSIX o abrir/copiar el enlace del APK.
 - **Perfil Apache (Laragon) para PHP en Windows:** ejecuta el Apache de Laragon con su propia configuración (virtual hosts, `.htaccess`, módulos) en lugar de `php -S`.
 - **Los asistentes de IA pueden usarlo** mediante un servidor MCP local y las herramientas de modelo de lenguaje de VS Code.
 
@@ -102,7 +104,7 @@ Los menús y la paleta de comandos siguen el idioma de VS Code; el panel y los m
 
 ## Qué hace DotPilot en tu equipo
 
-- **Sin telemetría** y sin llamadas de red. Todo es local.
+- **Sin telemetría.** DotPilot en sí no hace llamadas de red. Solo usan la red las herramientas que tú inicias: tus propias aplicaciones y los comandos opcionales de empaquetado (`npx @vscode/vsce` puede descargar `vsce`; `eas build` se comunica con los servidores de Expo).
 - **Procesos:** solo los proyectos y perfiles que detectó, iniciados a petición tuya. Detener los cierra.
 - **Puertos:** los que usan tus aplicaciones. Con asistentes de IA, un puerto aleatorio en `127.0.0.1` para el puente.
 - **Archivos:** un perfil temporal del navegador mientras hay una ventana vinculada (se borra después); con asistentes de IA, `~/.dotpilot` (copia del servidor MCP y un archivo de descubrimiento con el token del puente); en Windows con Laragon, un registro de consola en la carpeta temporal. Nunca modifica tus proyectos, `launch.json` ni `tasks.json`. **Conectar asistentes de IA** solo escribe los archivos indicados, después de que los elijas.

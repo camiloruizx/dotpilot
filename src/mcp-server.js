@@ -7,7 +7,7 @@ const { TOOLS } = require('./agent-tools');
 const { findBridge, callBridge } = require('./bridge');
 
 const SUPPORTED = ['2025-06-18', '2025-03-26', '2024-11-05'];
-const SERVER = { name: 'dotpilot', version: process.env.DOTPILOT_VERSION || '0.9.0' };
+const SERVER = { name: 'dotpilot', version: process.env.DOTPILOT_VERSION || '1.0.0' };
 let clientName = 'MCP client';
 
 function send(message) { process.stdout.write(JSON.stringify(message) + '\n'); }

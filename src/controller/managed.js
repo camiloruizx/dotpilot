@@ -59,32 +59,36 @@ module.exports = ({ vscode, path, portIsOpen, localEndpoint }) => ({
     if (!cancelled() && !occupied) this.monitorBrowser(profile, generation);
   },
 
-  appTerminal(spec, generation) {
+  // `companion` (opcional): estado de una API complementaria. Su salida, URL y proceso no se mezclan con los
+  // del proyecto principal (recentOutput, listeningUrl, appProcess).
+  appTerminal(spec, generation, companion = undefined) {
     const { AppProcess } = require('../runner');
     const writer = new vscode.EventEmitter(), closer = new vscode.EventEmitter();
     const queue = [];
     let opened = false, closed = false, requested = false;
     const write = text => {
-      this.remember(text);
+      if (!companion) this.remember(text); else companion.collect?.(text);
       const data = String(text).replace(/\r?\n/g, '\r\n');
       if (opened) writer.fire(data); else queue.push(data);
     };
     const finish = code => { if (closed) return; closed = true; closer.fire(code); };
     const proc = new AppProcess(spec, {
       onOutput: write,
-      onUrl: url => this.appUrl(url, generation),
+      onUrl: url => { if (companion) companion.url = url; else this.appUrl(url, generation); },
       onError: error => write(`[DotPilot] ${this.t('No se pudo iniciar {0}: {1}', spec.command, error.message)}\n`),
       onExit: code => {
         // Un cierre pedido por el usuario (Ctrl+C, cerrar la terminal) no es un fallo de la aplicación.
-        if (generation === this.generation && code && !requested) {
-          this.result = this.t('La aplicación terminó con código {0}. Revisa Terminal y Problemas.', code);
+        if (companion) { companion.exitCode = code; companion.onExit?.(code); }
+        if (generation === this.generation && code && !requested && !companion?.silent) {
+          this.result = companion ? this.t('La API {0} terminó con código {1}. Revisa su terminal.', companion.name, code)
+            : this.t('La aplicación terminó con código {0}. Revisa Terminal y Problemas.', code);
           this.resultError = true;
         }
         write(`\n[DotPilot] ${this.t('El proceso terminó con código {0}.', code)}\n`);
         finish(code);
       }
     });
-    this.appProcess = proc;
+    if (companion) companion.proc = proc; else this.appProcess = proc;
     return {
       onDidWrite: writer.event,
       onDidClose: closer.event,
@@ -98,8 +102,8 @@ module.exports = ({ vscode, path, portIsOpen, localEndpoint }) => ({
         }
       },
       // Cerrar la terminal o pulsar Ctrl+C detiene el servidor; la limpieza continúa en segundo plano.
-      close: () => { requested = true; void proc.stop(); finish(); },
-      handleInput: data => { if (data === '\u0003') { requested = true; void proc.stop(); finish(); } else proc.write(data); }
+      close: () => { requested = true; if (companion) companion.requested = true; void proc.stop(); finish(); },
+      handleInput: data => { if (data === '\u0003') { requested = true; if (companion) companion.requested = true; void proc.stop(); finish(); } else proc.write(data); }
     };
   },
 

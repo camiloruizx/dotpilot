@@ -81,5 +81,8 @@
   "dotpilot.connectAssistants": "Connect AI assistants",
   "dotpilot.assistantsEnabled.description": "Let AI assistants (Claude Code, Codex, Gemini, Copilot) use DotPilot through a local bridge that only listens on this computer.",
   "dotpilot.assistantsPermission.description": "ask: confirm each time an assistant runs, restarts or builds. allow: run without asking.",
-  "dotpilot.laragonPath.description": "Laragon install folder (for example C:\\laragon). Leave empty to detect it from the project or common locations."
+  "dotpilot.laragonPath.description": "Laragon install folder (for example C:\\laragon). Leave empty to detect it from the project or common locations.",
+  "dotpilot.manageCompanions": "Manage companion APIs",
+  "dotpilot.packageVsix": "Package VS Code extension (VSIX)",
+  "dotpilot.packageApk": "Build Android APK (Expo)"
 }

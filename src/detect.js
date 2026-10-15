@@ -43,8 +43,10 @@ function nodeFramework(dependencies) {
   else if (has('nuxt')) ui.push('Nuxt');
   else if (has('@angular/core')) ui.push('Angular');
   else if (has('astro')) ui.push('Astro');
+  else if (has('expo')) ui.push('Expo');
   else if (has('svelte') || has('@sveltejs/kit')) ui.push('Svelte');
   else if (has('vue')) ui.push('Vue');
+
   else if (has('react')) ui.push('React');
   else if (has('@nestjs/core')) ui.push('NestJS');
   else if (has('express') || has('fastify') || has('koa')) ui.push('Node');
@@ -61,16 +63,33 @@ function packageManager(manifest, names) {
   return 'npm';
 }
 
+// Empaquetado que DotPilot puede hacer por sí mismo: VSIX (extensión de VS Code) o APK (Expo).
+async function detectPackaging(dir, manifest, scripts, manager, { read, exists }) {
+  if (typeof manifest.engines?.vscode === 'string') {
+    return { kind: 'vsix', script: typeof scripts.package === 'string' ? 'package' : '', manager };
+  }
+  const dependencies = { ...(manifest.devDependencies || {}), ...(manifest.dependencies || {}) };
+  if (!Object.hasOwn(dependencies, 'expo')) return undefined;
+  const builds = safeJson(await read(path.join(dir, 'eas.json')))?.build;
+  const apk = Object.entries(builds && typeof builds === 'object' ? builds : {})
+    .filter(([name, value]) => SAFE_NAME.test(name) && value?.android?.buildType === 'apk').map(([name]) => name);
+  const local = await exists(path.join(dir, 'android', 'gradlew.bat')) || await exists(path.join(dir, 'android', 'gradlew'));
+  return { kind: 'apk', easProfile: apk.includes('preview') ? 'preview' : apk[0] || '', local };
+}
+
 async function detectNode(dir, names, { read, exists }) {
   const manifest = safeJson(await read(path.join(dir, 'package.json')));
   if (!manifest || typeof manifest !== 'object') return undefined;
   const scripts = manifest.scripts && typeof manifest.scripts === 'object' ? manifest.scripts : {};
   const dependencies = { ...(manifest.devDependencies || {}), ...(manifest.dependencies || {}) };
   const found = RUN_SCRIPTS.filter(name => typeof scripts[name] === 'string' && SAFE_NAME.test(name));
-  if (!found.length) return undefined;
+  const isExtension = typeof manifest.engines?.vscode === 'string';
+  // Una extensión de VS Code no se "ejecuta", pero sí se empaqueta: se muestra aunque no tenga scripts de inicio.
+  if (!found.length && !isExtension) return undefined;
   const lockfiles = new Set();
   for (const name of ['pnpm-lock.yaml', 'yarn.lock', 'bun.lockb', 'bun.lock']) if (await exists(path.join(dir, name))) lockfiles.add(name);
   const manager = packageManager(manifest, lockfiles);
+  const packaging = await detectPackaging(dir, manifest, scripts, manager, { read, exists });
   let configPort;
   for (const name of ['vite.config.ts', 'vite.config.js', 'vite.config.mjs', 'vite.config.mts']) {
     if (!(await exists(path.join(dir, name)))) continue;
@@ -83,7 +102,7 @@ async function detectNode(dir, names, { read, exists }) {
     if (match) envPort = Number(match[1]);
   }
   const laravelAssets = names.has('artisan') && Object.hasOwn(dependencies, 'laravel-vite-plugin');
-  const framework = laravelAssets ? 'Vite (assets)' : nodeFramework(dependencies);
+  const framework = laravelAssets ? 'Vite (assets)' : !found.length ? 'VS Code Extension' : nodeFramework(dependencies);
   const profiles = found.map(script => {
     const text = scripts[script];
     let port = scriptPort(text) ?? configPort ?? envPort;
@@ -94,7 +113,7 @@ async function detectNode(dir, names, { read, exists }) {
       launchBrowser: !laravelAssets, launchUrl: '', detectUrl: true
     };
   });
-  return { kind: 'node', framework, name: typeof manifest.name === 'string' ? manifest.name : '', dir, marker: path.join(dir, 'package.json'), profiles };
+  return { kind: 'node', framework, name: typeof manifest.name === 'string' ? manifest.name : '', dir, marker: path.join(dir, 'package.json'), profiles, ...(packaging ? { packaging } : {}) };
 }
 
 async function pythonCommand(dir, { exists }, platform) {

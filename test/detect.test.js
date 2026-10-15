@@ -209,3 +209,28 @@ test('a workspace of folders finds each plain PHP project, but not the folders o
   assert.equal(cms.length, 1);
   assert.equal(cms[0].dir, at());
 });
+
+test('a VS Code extension is listed for packaging even without run scripts, and keeps its own package script', async () => {
+  const [app] = await detect({
+    'ext/package.json': JSON.stringify({ name: 'ext', engines: { vscode: '^1.85.0' }, scripts: { package: 'vsce package', test: 'node --test' } }),
+    'ext/yarn.lock': ''
+  });
+  assert.equal(app.kind, 'node');
+  assert.equal(app.framework, 'VS Code Extension');
+  assert.deepEqual(app.profiles, []);
+  assert.deepEqual(app.packaging, { kind: 'vsix', script: 'package', manager: 'yarn' });
+  const [bare] = await detect({ 'ext/package.json': JSON.stringify({ engines: { vscode: '^1.85.0' } }) });
+  assert.deepEqual(bare.packaging, { kind: 'vsix', script: '', manager: 'npm' });
+});
+
+test('an Expo project is detected as Expo and offers an APK profile from eas.json and/or the android folder', async () => {
+  const manifest = JSON.stringify({ name: 'app', scripts: { start: 'expo start' }, dependencies: { expo: '~54.0.0', react: '19', 'react-native': '0.81' } });
+  const eas = JSON.stringify({ build: { development: { developmentClient: true }, preview: { android: { buildType: 'apk' } }, production: {} } });
+  const [app] = await detect({ 'app/package.json': manifest, 'app/eas.json': eas, 'app/android/gradlew': '' });
+  assert.equal(app.framework, 'Expo');
+  assert.deepEqual(app.packaging, { kind: 'apk', easProfile: 'preview', local: true });
+  const [none] = await detect({ 'app/package.json': manifest, 'app/eas.json': JSON.stringify({ build: { production: {} } }) });
+  assert.deepEqual(none.packaging, { kind: 'apk', easProfile: '', local: false });
+  const [plain] = await detect({ 'web/package.json': JSON.stringify({ scripts: { dev: 'vite' }, devDependencies: { vite: '^5' } }) });
+  assert.equal(plain.packaging, undefined);
+});
