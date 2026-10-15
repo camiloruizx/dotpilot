@@ -35,7 +35,7 @@ Depurar, Hot Reload, compilar y pruebas son solo de .NET; se desactivan para los
 ## Primeros pasos
 
 1. Abre una carpeta con un proyecto en un **espacio de trabajo de confianza**.
-2. Abre la vista **DotPilot** en el Explorador (o el menú azul de DotPilot en la barra del editor).
+2. Haz clic en el icono de **DotPilot** en la barra de actividad (o usa el menú azul de DotPilot en la barra del editor).
 3. Elige proyecto y perfil y pulsa **Ejecutar** (`Ctrl+Alt+F5`), o **Depurar** (`Ctrl+Alt+F6`) en .NET.
 
 | Atajo | Acción |

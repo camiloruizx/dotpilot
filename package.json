@@ -276,8 +276,17 @@
         "icon": "$(sparkle)"
       }
     ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "dotpilot",
+          "title": "DotPilot",
+          "icon": "media/dotpilot-activity.svg"
+        }
+      ]
+    },
     "views": {
-      "explorer": [
+      "dotpilot": [
         {
           "id": "dotpilot.panel",
           "name": "DotPilot",

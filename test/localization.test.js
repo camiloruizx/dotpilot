@@ -89,3 +89,17 @@ test('settings protocol accepts only declared keys and exact enum or boolean val
   for(const [key,value] of [['dotnetPath','malicious'],['__proto__',true],['browser','firefox'],['showStatusBar','true'],['language',{}],['browser',null]])assert.equal(validSetting(key,value),false);
   assert.ok(validSetting('language','en'));assert.ok(validSetting('language','es'));
 });
+
+test('the panel lives in its own Activity Bar container with an icon that ships in the package',()=>{
+  const p=require('../package.json');
+  const container=p.contributes.viewsContainers.activitybar.find(item=>item.id==='dotpilot');
+  assert.ok(container,'activity bar container');
+  assert.match(container.id,/^[a-zA-Z0-9_-]+$/,'VS Code only accepts letters, digits, hyphen and underscore');
+  assert.ok(fs.existsSync(path.join(__dirname,'..',container.icon)),container.icon);
+  const ignored=fs.readFileSync(path.join(__dirname,'..','.vscodeignore'),'utf8').split(String.fromCharCode(10)).map(line=>line.trim()).filter(Boolean);
+  assert.ok(!ignored.includes(container.icon)&&!ignored.includes('media/**'),'icon is not ignored');
+  assert.deepEqual(p.contributes.views.dotpilot.map(view=>view.id),['dotpilot.panel']);
+  assert.equal(p.contributes.views.explorer,undefined);
+  // Los menús del título de la vista siguen apuntando al mismo id.
+  assert.ok(p.contributes.menus['view/title'].every(item=>item.when==='view == dotpilot.panel'));
+});

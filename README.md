@@ -35,7 +35,7 @@ Debugging, Hot Reload, build and tests are .NET-only; they are disabled for the 
 ## Getting started
 
 1. Open a folder with a project in a **trusted workspace**.
-2. Open the **DotPilot** view in the Explorer (or the blue DotPilot menu in the editor toolbar).
+2. Click the **DotPilot** icon in the Activity Bar (or use the blue DotPilot menu in the editor toolbar).
 3. Pick the startup project and profile, then **Run** (`Ctrl+Alt+F5`), or **Debug** (`Ctrl+Alt+F6`) for .NET.
 
 | Shortcut | Action |

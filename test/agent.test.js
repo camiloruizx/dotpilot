@@ -346,8 +346,10 @@ test('the product name is DotPilot everywhere: no trace of the previous identifi
   for (const file of shipped) {
     assert.doesNotMatch(fs.readFileSync(path.join(__dirname, '..', file), 'utf8'), /dotnetControls|dotnet-controls/, file);
   }
-  const ids = [...pkg.contributes.commands.map(c => c.command), ...pkg.contributes.views.explorer.map(v => v.id), ...pkg.contributes.submenus.map(s => s.id)];
+  const ids = [...pkg.contributes.commands.map(c => c.command), ...pkg.contributes.views.dotpilot.map(v => v.id), ...pkg.contributes.submenus.map(s => s.id)];
   for (const id of ids) assert.ok(id.startsWith('dotpilot.'), id);
+  // Los identificadores de contenedores de vistas solo admiten letras, números, guiones y guion bajo (sin puntos).
+  assert.deepEqual(pkg.contributes.viewsContainers.activitybar.map(c => c.id), ['dotpilot']);
   for (const key of Object.keys(pkg.contributes.configuration.properties)) assert.ok(key.startsWith('dotpilot.'), key);
   assert.equal(pkg.contributes.taskDefinitions[0].type, 'dotpilot');
 });

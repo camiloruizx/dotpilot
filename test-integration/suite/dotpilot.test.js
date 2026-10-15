@@ -616,6 +616,21 @@ const tests = [
       }
     }
   },
+  {
+    name: 'barra de actividad: el panel tiene su propio contenedor con icono y se puede mostrar',
+    fn: async () => {
+      const extension = vscode.extensions.getExtension('camiloruizx.dotpilot');
+      const containers = extension.packageJSON.contributes.viewsContainers.activitybar;
+      assert.deepEqual(containers.map(item => item.id), ['dotpilot']);
+      assert.ok(fs.existsSync(path.join(extension.extensionPath, containers[0].icon)), 'falta el icono del contenedor');
+      // Los comandos de VS Code para abrir el contenedor y la vista existen y no fallan.
+      const known = (await vscode.commands.getCommands(true)).filter(command => command === 'workbench.view.extension.dotpilot');
+      console.log('[dotpilot] comandos del contenedor:', JSON.stringify(known));
+      assert.ok(known.length > 0, 'VS Code no registró el contenedor de DotPilot');
+      await vscode.commands.executeCommand(known[0]);
+      await vscode.commands.executeCommand('dotpilot.showPanel');
+    }
+  },
 ];
 
 module.exports = tests;
