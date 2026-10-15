@@ -4,6 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -33,9 +34,11 @@ jobs:
           path: dotpilot.vsix
           if-no-files-found: error
 
-  # Pruebas en un VS Code real. Se dejan como informativas hasta ver que son estables en los runners.
+  # Pruebas en un VS Code real. Dependen de tiempos del runner (navegador, dotnet watch), así que solo se
+  # ejecutan a mano: Actions > CI > Run workflow. Localmente: npm run test:integration.
   integration:
     name: Integration (VS Code, Windows)
+    if: github.event_name == 'workflow_dispatch'
     runs-on: windows-latest
     continue-on-error: true
     steps:
