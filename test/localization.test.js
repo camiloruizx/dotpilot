@@ -23,20 +23,27 @@ test('all manifest localization tokens resolve in both languages',()=>{
   assert.deepEqual(Object.keys(en).sort(),Object.keys(es).sort());
   const toolbar=p.contributes.menus['editor/title'];
   assert.deepEqual(toolbar.map(item=>item.command||item.submenu),[
-    'dotpilot.run','dotpilot.pause','dotpilot.continue','dotpilot.stop','dotpilot.main'
+    'dotpilot.run','dotpilot.pause','dotpilot.continue','dotpilot.stop','dotpilot.runApi','dotpilot.stopApi','dotpilot.main'
   ]);
   // Orden visual: menú DotPilot (17), Ejecutar sin depurar (18), Pausar/Continuar (19), Detener (20).
   assert.deepEqual(toolbar.slice(0,4).map(item=>item.group),['navigation@18','navigation@19','navigation@19','navigation@20']);
-  assert.equal(toolbar[4].submenu,'dotpilot.main');
-  assert.equal(toolbar[4].group,'navigation@17');
+  assert.deepEqual(toolbar.slice(4,6).map(item=>item.group),['navigation@21','navigation@21']);
+  assert.equal(toolbar[6].submenu,'dotpilot.main');
+  assert.equal(toolbar[6].group,'navigation@17');
   assert.deepEqual(toolbar.slice(0,4).map(item=>item.when),[
     'dotpilot.hasProjects && config.dotpilot.showEditorToolbar && !dotpilot.busy && !dotpilot.active',
     'dotpilot.hasProjects && config.dotpilot.showEditorToolbar && dotpilot.debugging && !dotpilot.paused',
     'dotpilot.hasProjects && config.dotpilot.showEditorToolbar && dotpilot.debugging && dotpilot.paused',
     'dotpilot.hasProjects && config.dotpilot.showEditorToolbar && dotpilot.canStop'
   ]);
+  assert.deepEqual(toolbar.slice(4,6).map(item=>item.when),[
+    'dotpilot.hasProjects && config.dotpilot.showEditorToolbar && dotpilot.apiSeparate && !dotpilot.apiRunning',
+    'dotpilot.hasProjects && config.dotpilot.showEditorToolbar && dotpilot.apiRunning'
+  ]);
   const commands=new Map(p.contributes.commands.map(command=>[command.command,command]));
-  assert.deepEqual(toolbar.slice(0,4).map(item=>commands.get(item.command).icon),['$(play)','$(debug-pause)','$(debug-continue)','$(debug-stop)']);
+  assert.deepEqual(toolbar.slice(0,6).map(item=>commands.get(item.command).icon),['$(play)','$(debug-pause)','$(debug-continue)','$(debug-stop)','$(play-circle)','$(stop-circle)']);
+  // La barra flotante de depuración también lleva el segundo par Ejecutar/Detener (API).
+  assert.deepEqual(p.contributes.menus['debug/toolBar'].map(item=>item.command),['dotpilot.runApi','dotpilot.stopApi']);
 });
 test('menus and commands have one set of translations: no per-language copies, every title is a package.nls token',()=>{
   const p=require('../package.json'),nls={en:require('../package.nls.json'),es:require('../package.nls.es.json')};

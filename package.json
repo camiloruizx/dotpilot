@@ -226,14 +226,14 @@
         "command": "dotpilot.runApi",
         "title": "%dotpilot.runApi%",
         "category": "DotPilot",
-        "icon": "$(play)",
+        "icon": "$(play-circle)",
         "enablement": "dotpilot.apiSeparate && !dotpilot.apiRunning"
       },
       {
         "command": "dotpilot.stopApi",
         "title": "%dotpilot.stopApi%",
         "category": "DotPilot",
-        "icon": "$(debug-stop)",
+        "icon": "$(stop-circle)",
         "enablement": "dotpilot.apiRunning"
       },
       {
@@ -337,9 +337,31 @@
           "group": "navigation@20"
         },
         {
+          "command": "dotpilot.runApi",
+          "when": "dotpilot.hasProjects && config.dotpilot.showEditorToolbar && dotpilot.apiSeparate && !dotpilot.apiRunning",
+          "group": "navigation@21"
+        },
+        {
+          "command": "dotpilot.stopApi",
+          "when": "dotpilot.hasProjects && config.dotpilot.showEditorToolbar && dotpilot.apiRunning",
+          "group": "navigation@21"
+        },
+        {
           "submenu": "dotpilot.main",
           "when": "dotpilot.hasProjects && config.dotpilot.showEditorToolbar",
           "group": "navigation@17"
+        }
+      ],
+      "debug/toolBar": [
+        {
+          "command": "dotpilot.runApi",
+          "when": "dotpilot.apiSeparate && !dotpilot.apiRunning",
+          "group": "navigation@21"
+        },
+        {
+          "command": "dotpilot.stopApi",
+          "when": "dotpilot.apiRunning",
+          "group": "navigation@21"
         }
       ],
       "dotpilot.main": [

@@ -96,7 +96,7 @@ module.exports = ({ vscode, path, DOTNET_ONLY, LABELS, BROWSERS, ACTIONS, browse
       item.command = enabled.includes(item.action) ? 'dotpilot.' + item.action : undefined;
       item.color = enabled.includes(item.action) ? undefined : new vscode.ThemeColor('disabledForeground');
       item.accessibilityInformation = { label: item.tooltip };
-      const visible = this.config().get('showStatusBar', false) && hasProjects && (!this.app || !DOTNET_ONLY.has(item.action)) && (item.action !== 'pause' || this.session) && (!['stop', 'restart'].includes(item.action) || active || this.busy || this.tasks.size);
+      const visible = this.config().get('showStatusBar', false) && hasProjects && (!this.app || !DOTNET_ONLY.has(item.action)) && (item.action !== 'pause' || this.session) && (!['stop', 'restart'].includes(item.action) || active || this.busy || this.tasks.size) && (item.action !== 'runApi' || (apiSeparate && !apiRunning)) && (item.action !== 'stopApi' || apiRunning);
       if (visible) item.show(); else item.hide();
     }
     for (const [key, value] of Object.entries({ hasProjects, dotnet, busy: this.busy, active, debugging: !!this.session, paused: this.paused, canStop: active || this.busy || !!this.tasks.size, browser: this.browser(), apiSeparate, apiRunning })) {
@@ -120,7 +120,7 @@ module.exports = ({ vscode, path, DOTNET_ONLY, LABELS, BROWSERS, ACTIONS, browse
   },
 
   createStatusItems() {
-    const buttons = [['selectProject', '$(project)', 'Proyecto de inicio'], ['run', '$(play)', 'Ejecutar sin depurar'], ['selectProfile', '', 'Perfil de ejecución'], ['selectConfiguration', '', 'Configuración de compilación'], ['debug', '$(debug-alt)', 'Iniciar depuración'], ['pause', '$(debug-pause)', 'Pausar / Continuar'], ['stop', '$(debug-stop)', 'Detener'], ['restart', '$(debug-restart)', 'Reiniciar'], ['buildMenu', '', 'Compilar / Recompilar / Limpiar / Analizar']];
+    const buttons = [['selectProject', '$(project)', 'Proyecto de inicio'], ['run', '$(play)', 'Ejecutar sin depurar'], ['runApi', '$(play-circle)', 'Ejecutar API'], ['stopApi', '$(stop-circle)', 'Detener API'], ['selectProfile', '', 'Perfil de ejecución'], ['selectConfiguration', '', 'Configuración de compilación'], ['debug', '$(debug-alt)', 'Iniciar depuración'], ['pause', '$(debug-pause)', 'Pausar / Continuar'], ['stop', '$(debug-stop)', 'Detener'], ['restart', '$(debug-restart)', 'Reiniciar'], ['buildMenu', '', 'Compilar / Recompilar / Limpiar / Analizar']];
     buttons.forEach(([action, text, label], index) => {
       const item = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 200 - index);
       item.action = action; item.text = text; item.label = label; item.name = 'DotPilot: ' + this.t(label);

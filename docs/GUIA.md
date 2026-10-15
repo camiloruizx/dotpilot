@@ -93,7 +93,7 @@ Run, debug and build .NET projects from a dedicated **DotPilot menu** and a rede
 2. Reload the window if requested. Open a trusted folder with a .NET SDK project and select your startup project, launch profile, configuration and framework in the DotPilot view (click the DotPilot icon in the Activity Bar).
 3. Choose **Run**, **Debug** or **Hot Reload**. Debugging requires Microsoft's C# extension; .NET SDK 8+ and VS Code 1.85+ are required. C# Dev Kit is optional.
 
-The editor toolbar shows the blue **DotPilot menu** first, followed by the direct **Run without debugging**, **Pause / Continue** (during debugging) and **Stop** buttons. The menu groups this extension's other actions. Build, rebuild, clean, NuGet restore, tests and analysis use the selected project or solution target. Build alone does not run a server. Only Project launch profiles are supported; IIS Express and Docker profiles are not supported.
+The editor toolbar shows the blue **DotPilot menu** first, followed by the direct **Run without debugging**, **Pause / Continue** (during debugging) and **Stop** buttons; with the APIs running **Separately**, the second **Run API** / **Stop API** pair (circled icons) follows them, also in the status bar and the floating debug toolbar. The menu groups this extension's other actions. Build, rebuild, clean, NuGet restore, tests and analysis use the selected project or solution target. Build alone does not run a server. Only Project launch profiles are supported; IIS Express and Docker profiles are not supported.
 
 ### Language and settings
 
@@ -208,7 +208,7 @@ Necesitas **SDK .NET 8 o posterior**, VS Code 1.85 o posterior y, para depurar, 
 
 ## Controles superiores
 
-Con un proyecto .NET abierto, aparece primero el menú azul de **DotPilot** y después los botones directos **Ejecutar sin depurar**, **Pausar / Continuar** (durante la depuración) y **Detener**, arriba a la derecha del editor. El menú agrupa las demás acciones de Ejecución, Proyecto, Compilación y pruebas y Ajustes. Así se distinguen las acciones de DotPilot de las otras extensiones. Los controles directos siguen disponibles dentro del panel y mediante los atajos.
+Con un proyecto .NET abierto, aparece primero el menú azul de **DotPilot** y después los botones directos **Ejecutar sin depurar**, **Pausar / Continuar** (durante la depuración) y **Detener**, arriba a la derecha del editor; con las APIs **Por separado**, el segundo par **Ejecutar API** / **Detener API** (íconos dentro de un círculo) va después y aparece también en la barra inferior y en la barra flotante de depuración. El menú agrupa las demás acciones de Ejecución, Proyecto, Compilación y pruebas y Ajustes. Así se distinguen las acciones de DotPilot de las otras extensiones. Los controles directos siguen disponibles dentro del panel y mediante los atajos.
 
 VS Code no expone a extensiones la zona de la barra de título junto a «Try Agents Window». Se utiliza la barra del editor admitida por la API oficial. Si no se ve, abre un archivo y comprueba que las acciones del editor estén visibles en tu diseño de VS Code.
 
