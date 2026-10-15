@@ -580,8 +580,16 @@ const tests = [
         await vscode.commands.executeCommand('dotpilot.run');
         await waitFor(() => /CS0029/.test(controller.recentOutput.join('\n')), { timeout: 120000, message: 'el error CS0029 en la salida' });
         await waitFor(() => controller.resultError === true && !controller.active(), { timeout: 30000, message: 'que la ejecución termine con error' });
-        const problems = await controller.agentApi().call('dotpilot_get_problems', {}, { client: 'prueba', confirmed: true });
-        assert.ok(problems.problems.some(item => /CS0029/.test(String(item.code)) || /CS0029/.test(item.message)), JSON.stringify(problems));
+        // El problem matcher publica el diagnóstico de forma asíncrona: en un runner lento llega después de que el proceso termina.
+        let problems;
+        try {
+          await waitFor(async () => {
+            problems = await controller.agentApi().call('dotpilot_get_problems', {}, { client: 'prueba', confirmed: true });
+            return problems.problems.some(item => /CS0029/.test(String(item.code)) || /CS0029/.test(item.message));
+          }, { timeout: 30000, message: 'el diagnóstico CS0029 en Problemas' });
+        } catch (error) {
+          assert.fail(`${error.message}; último resultado: ${JSON.stringify(problems)}`);
+        }
       } finally {
         fs.writeFileSync(program, original);
       }

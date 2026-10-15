@@ -53,6 +53,9 @@ jobs:
       - run: npm ci
       - name: Run the integration suite (no Microsoft extensions)
         run: node test-integration/run.js sin-csharp
+        env:
+          # En los runners el watcher nativo de dotnet watch no ve los cambios de archivo a tiempo.
+          DOTNET_USE_POLLING_FILE_WATCHER: 'true'
       - uses: actions/upload-artifact@v4
         if: always()
         with:
