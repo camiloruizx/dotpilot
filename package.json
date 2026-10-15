@@ -16,8 +16,7 @@
   "activationEvents": [
     "workspaceContains:**/*.{csproj,fsproj,vbproj,sln,slnx}",
     "workspaceContains:**/{package.json,artisan,manage.py,composer.json,requirements.txt,pyproject.toml}",
-    "workspaceContains:**/{compose.yaml,compose.yml,docker-compose.yaml,docker-compose.yml}",
-    "onView:dotpilot.panel"
+    "workspaceContains:**/{compose.yaml,compose.yml,docker-compose.yaml,docker-compose.yml}"
   ],
   "capabilities": {
     "untrustedWorkspaces": {
@@ -298,7 +297,8 @@
         {
           "id": "dotpilot.panel",
           "name": "DotPilot",
-          "type": "webview"
+          "type": "webview",
+          "icon": "media/dotpilot-activity.svg"
         }
       ]
     },
@@ -654,8 +654,7 @@
         "icon": "$(list-tree)",
         "inputSchema": {
           "type": "object",
-          "properties": {},
-          "additionalProperties": false
+          "properties": {}
         }
       },
       {
@@ -668,8 +667,7 @@
         "icon": "$(pulse)",
         "inputSchema": {
           "type": "object",
-          "properties": {},
-          "additionalProperties": false
+          "properties": {}
         }
       },
       {
@@ -690,8 +688,7 @@
           },
           "required": [
             "project"
-          ],
-          "additionalProperties": false
+          ]
         }
       },
       {
@@ -712,8 +709,7 @@
           },
           "required": [
             "profile"
-          ],
-          "additionalProperties": false
+          ]
         }
       },
       {
@@ -733,8 +729,7 @@
               "maximum": 120,
               "description": "Seconds to wait for the server to answer before returning. Default 30. Use 0 to return immediately."
             }
-          },
-          "additionalProperties": false
+          }
         }
       },
       {
@@ -754,8 +749,7 @@
               "maximum": 120,
               "description": "Seconds to wait for the server to answer before returning. Default 30. Use 0 to return immediately."
             }
-          },
-          "additionalProperties": false
+          }
         }
       },
       {
@@ -775,8 +769,7 @@
               "maximum": 120,
               "description": "Seconds to wait for the server to answer before returning. Default 30. Use 0 to return immediately."
             }
-          },
-          "additionalProperties": false
+          }
         }
       },
       {
@@ -789,8 +782,7 @@
         "icon": "$(debug-stop)",
         "inputSchema": {
           "type": "object",
-          "properties": {},
-          "additionalProperties": false
+          "properties": {}
         }
       },
       {
@@ -810,8 +802,7 @@
               "maximum": 120,
               "description": "Seconds to wait for the server to answer before returning. Default 30. Use 0 to return immediately."
             }
-          },
-          "additionalProperties": false
+          }
         }
       },
       {
@@ -837,8 +828,7 @@
               ],
               "description": "Build step. Default build."
             }
-          },
-          "additionalProperties": false
+          }
         }
       },
       {
@@ -851,8 +841,7 @@
         "icon": "$(browser)",
         "inputSchema": {
           "type": "object",
-          "properties": {},
-          "additionalProperties": false
+          "properties": {}
         }
       },
       {
@@ -872,8 +861,7 @@
               "maximum": 500,
               "description": "How many trailing lines to return. Default 80."
             }
-          },
-          "additionalProperties": false
+          }
         }
       },
       {
@@ -891,8 +879,7 @@
               "type": "boolean",
               "description": "Include warnings. Default false."
             }
-          },
-          "additionalProperties": false
+          }
         }
       }
     ]

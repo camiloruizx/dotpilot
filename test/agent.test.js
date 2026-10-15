@@ -45,7 +45,11 @@ test('package.json contributes every tool exactly as the shared definition says'
   for (const tool of TOOLS) {
     const item = contributed.find(t => t.name === tool.name);
     assert.equal(item.modelDescription, tool.description, tool.name);
-    assert.deepEqual(item.inputSchema, tool.inputSchema, tool.name);
+    // El manifiesto omite `additionalProperties: false` (el esquema de package.json del editor lo marca como advertencia);
+    // validateInput rechaza igualmente los parámetros desconocidos.
+    const { additionalProperties, ...manifestSchema } = tool.inputSchema;
+    assert.equal(additionalProperties, false, tool.name);
+    assert.deepEqual(item.inputSchema, manifestSchema, tool.name);
     assert.match(item.toolReferenceName, /^dotpilot[A-Z]/);
   }
   assert.ok(pkg.contributes.commands.some(c => c.command === 'dotpilot.connectAssistants'));
