@@ -6,7 +6,11 @@ DotPilot detecta los proyectos ejecutables de tu espacio de trabajo, te deja ele
 
 [English](README.md) · [Guía detallada](docs/GUIA.md) · [Cambios](CHANGELOG.md)
 
-<img src="media/screenshots/panel-dotnet.png" alt="Panel de DotPilot con un proyecto .NET" width="280"> <img src="media/screenshots/panel-node.png" alt="Panel de DotPilot ejecutando una app React + Vite" width="280"> <img src="media/screenshots/panel-apache.png" alt="Panel de DotPilot ejecutando un sitio PHP con el Apache de Laragon" width="280">
+<img src="media/screenshots/panel-dotnet.png" alt="Panel de DotPilot con un proyecto .NET y su API complementaria" width="280"> <img src="media/screenshots/panel-node.png" alt="Panel de DotPilot ejecutando una app React + Vite" width="280"> <img src="media/screenshots/panel-apache.png" alt="Panel de DotPilot con un sitio PHP y el perfil Apache (Laragon)" width="280">
+
+La barra del editor: el menú de DotPilot y Ejecutar, la misma barra al depurar (Pausar y Detener) y el menú abierto.
+
+<img src="media/screenshots/toolbar-idle.png" alt="Barra del editor con el menú de DotPilot y el botón Ejecutar" width="124"> <img src="media/screenshots/toolbar-running.png" alt="Barra del editor al depurar, con Pausar y Detener" width="150"> <img src="media/screenshots/toolbar-menu.png" alt="El menú de DotPilot en la barra del editor" width="419">
 
 ## Qué hace
 

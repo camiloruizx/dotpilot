@@ -6,7 +6,11 @@ DotPilot detects the runnable projects in your workspace, lets you pick a projec
 
 [Español](README.es.md) · [Detailed guide](docs/GUIA.md) · [Changelog](CHANGELOG.md)
 
-<img src="media/screenshots/panel-dotnet.png" alt="DotPilot panel with a .NET project" width="280"> <img src="media/screenshots/panel-node.png" alt="DotPilot panel running a React + Vite app" width="280"> <img src="media/screenshots/panel-apache.png" alt="DotPilot panel running a PHP site through Laragon's Apache" width="280">
+<img src="media/screenshots/panel-dotnet.png" alt="DotPilot panel with a .NET project and its companion API" width="280"> <img src="media/screenshots/panel-node.png" alt="DotPilot panel running a React + Vite app" width="280"> <img src="media/screenshots/panel-apache.png" alt="DotPilot panel with a PHP site and the Apache (Laragon) profile" width="280">
+
+The editor toolbar: the DotPilot menu and Run, the same toolbar while debugging (Pause and Stop), and the menu open.
+
+<img src="media/screenshots/toolbar-idle.png" alt="Editor toolbar with the DotPilot menu and the Run button" width="124"> <img src="media/screenshots/toolbar-running.png" alt="Editor toolbar while debugging, with Pause and Stop" width="150"> <img src="media/screenshots/toolbar-menu.png" alt="The DotPilot menu in the editor toolbar" width="419">
 
 ## What it does
 

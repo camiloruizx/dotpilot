@@ -105,3 +105,11 @@ Al **Pausar** una aplicación ASP.NET (que tiene varios hilos), DotPilot abre el
 | `fixtures/NodeSample/`, `PhpSample/`, `PythonSample/` | Servidores mínimos de Node.js, PHP y Python |
 
 El `Controller` de DotPilot se obtiene de `extension.exports` (lo devuelve `activate()`), por lo que las pruebas observan el estado real sin cambiar código de producción.
+
+## Capturas de pantalla del README
+
+```
+node test-integration/screenshots.js
+```
+
+Abre un VS Code real con proyectos de ejemplo (.NET con su API complementaria, React + Vite y PHP con el perfil Apache), conduce DotPilot por sus comandos y toma las capturas de `media/screenshots/` por el protocolo de depuración remota (ventana de 1280 px, escala 2×, tema oscuro). Todas las capturas del panel salen del mismo tamaño. Requiere haber corrido antes `npm run test:integration` (deja en caché las extensiones de C#) y el SDK de .NET; `DOTPILOT_SHOTS_OUT` cambia la carpeta de salida.
