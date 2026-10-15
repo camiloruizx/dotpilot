@@ -29,8 +29,6 @@
   "dotpilot.stepInto": "Paso por instrucciones",
   "dotpilot.stepOut": "Salir de la función",
   "dotpilot.continue": "Continuar depuración",
-  "dotpilot.showPanel": "Mostrar panel DotPilot",
-  "dotpilot.hidePanel": "Ocultar panel DotPilot",
   "dotpilot.showSettings": "Abrir ajustes de DotPilot",
   "dotpilot.compile.label": "Compilación y pruebas",
   "dotpilot.launchOptions.label": "Proyecto",

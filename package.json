@@ -206,18 +206,6 @@
         "enablement": "dotpilot.debugging && dotpilot.paused"
       },
       {
-        "command": "dotpilot.showPanel",
-        "title": "%dotpilot.showPanel%",
-        "category": "DotPilot",
-        "icon": "$(layout-sidebar)"
-      },
-      {
-        "command": "dotpilot.hidePanel",
-        "title": "%dotpilot.hidePanel%",
-        "category": "DotPilot",
-        "icon": "$(layout-sidebar)"
-      },
-      {
         "command": "dotpilot.showSettings",
         "title": "%dotpilot.showSettings%",
         "category": "DotPilot",
@@ -334,27 +322,7 @@
           "group": "navigation@17"
         }
       ],
-      "commandPalette": [
-        {
-          "command": "dotpilot.showPanel",
-          "when": "!dotpilot.panelVisible"
-        },
-        {
-          "command": "dotpilot.hidePanel",
-          "when": "dotpilot.panelVisible"
-        }
-      ],
       "dotpilot.main": [
-        {
-          "command": "dotpilot.showPanel",
-          "group": "1_panel@1",
-          "when": "!dotpilot.panelVisible"
-        },
-        {
-          "command": "dotpilot.hidePanel",
-          "group": "1_panel@1",
-          "when": "dotpilot.panelVisible"
-        },
         {
           "command": "dotpilot.run",
           "group": "2_run@1"

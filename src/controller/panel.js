@@ -3,10 +3,6 @@
 // Son métodos del Controller: extension.js los mezcla en su prototipo. Reciben sus dependencias (incluido
 // `vscode`) para que las pruebas unitarias puedan ejecutarlos con un VS Code simulado.
 module.exports = ({ vscode, path, DOTNET_ONLY, LABELS, BROWSERS, ACTIONS, browserUrl, fields, validSetting, readSettings }) => ({
-  async hidePanel() {
-    if (this.view?.visible) await vscode.commands.executeCommand('dotpilot.panel.toggleVisibility');
-  },
-
   async showSettings() {
     this.requestedTab = 'settings';
     await vscode.commands.executeCommand('dotpilot.panel.focus');
@@ -97,7 +93,7 @@ module.exports = ({ vscode, path, DOTNET_ONLY, LABELS, BROWSERS, ACTIONS, browse
       const visible = this.config().get('showStatusBar', false) && hasProjects && (!this.app || !DOTNET_ONLY.has(item.action)) && (item.action !== 'pause' || this.session) && (!['stop', 'restart'].includes(item.action) || active || this.busy || this.tasks.size);
       if (visible) item.show(); else item.hide();
     }
-    for (const [key, value] of Object.entries({ hasProjects, dotnet, busy: this.busy, active, debugging: !!this.session, paused: this.paused, canStop: active || this.busy || !!this.tasks.size, panelVisible: !!this.view?.visible, browser: this.browser() })) {
+    for (const [key, value] of Object.entries({ hasProjects, dotnet, busy: this.busy, active, debugging: !!this.session, paused: this.paused, canStop: active || this.busy || !!this.tasks.size, browser: this.browser() })) {
       if (this.contextValues.get(key) !== value) {
         this.contextValues.set(key, value);
         void vscode.commands.executeCommand('setContext', 'dotpilot.' + key, value);

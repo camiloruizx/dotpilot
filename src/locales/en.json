@@ -126,8 +126,6 @@
   "Mostrar problemas": "Show problems",
   "Comprobar SDK .NET": "Check .NET SDK",
   "Continuar depuración": "Continue debugging",
-  "Mostrar panel DotPilot": "Show DotPilot panel",
-  "Ocultar panel DotPilot": "Hide DotPilot panel",
   "Ejecutar análisis de código": "Run code analysis",
   "Abrir ajustes de DotPilot": "Open DotPilot settings",
   "Ejecutar y compilar requiere confiar en el espacio de trabajo.": "Running and building requires a trusted workspace.",

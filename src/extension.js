@@ -17,7 +17,7 @@ const NOISE = /[\\/](?:node_modules|\.git|vendor|\.venv|venv|__pycache__)[\\/]/;
 const DOTNET_ONLY = new Set(['manageCompanions', 'debug', 'watch', 'selectConfiguration', 'selectFramework', 'selectTarget', 'diagnostics', 'buildMenu', 'build', 'rebuild', 'clean', 'restore', 'test', 'analyze']);
 const LABELS = { build: 'Compilar', rebuild: 'Recompilar', clean: 'Limpiar', restore: 'Restaurar NuGet', test: 'Ejecutar pruebas', analyze: 'Analizar código' };
 const BROWSERS = { edge: 'Microsoft Edge', chrome: 'Google Chrome', external: 'Predeterminado del sistema' };
-const ACTIONS = ['run', 'debug', 'watch', 'showPanel', 'hidePanel', 'showSettings', 'advancedSettings', 'continue', 'pause', 'stop', 'restart', ...Object.keys(LABELS), 'selectProject', 'selectProfile', 'selectConfiguration', 'selectFramework', 'selectTarget', 'refresh', 'buildMenu', 'openBrowser', 'editProfile', 'showOutput', 'showProblems', 'diagnostics', 'stepOver', 'stepInto', 'stepOut'];
+const ACTIONS = ['run', 'debug', 'watch', 'showSettings', 'advancedSettings', 'continue', 'pause', 'stop', 'restart', ...Object.keys(LABELS), 'selectProject', 'selectProfile', 'selectConfiguration', 'selectFramework', 'selectTarget', 'refresh', 'buildMenu', 'openBrowser', 'editProfile', 'showOutput', 'showProblems', 'diagnostics', 'stepOver', 'stepInto', 'stepOut'];
 ACTIONS.push('selectBrowser', 'browserEdge', 'browserChrome', 'browserExternal', 'browserDefault', 'connectAssistants', 'manageCompanions', 'packageVsix', 'packageApk');
 class CancelledOperation extends Error { constructor() { super('Operation stopped.'); } }
 
@@ -255,8 +255,6 @@ class Controller {
   async invoke(action) {
     let acquired = false;
     try {
-      if (action === 'showPanel') return await vscode.commands.executeCommand('dotpilot.panel.focus');
-      if (action === 'hidePanel') return await this.hidePanel();
       if (action === 'showSettings') return await this.showSettings();
       if (action === 'advancedSettings') return await vscode.commands.executeCommand('workbench.action.openSettings', '@ext:camiloruizx.dotpilot');
       if (action === 'selectBrowser') return await this.selectBrowser();

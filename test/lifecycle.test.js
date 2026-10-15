@@ -93,13 +93,6 @@ test('failed browser launch allows retry and preserves backend execution',async(
   assert.ok(c.active()); assert.equal(actions.length,0); assert.ok(removed.length);
 });
 
-test('Hide does not accidentally reveal a hidden view',async()=>{
-  const {c,commands}=harness();
-  await c.hidePanel(); c.view={visible:false}; await c.hidePanel(); assert.equal(commands.length,0);
-  c.view.visible=true; await c.hidePanel();
-  assert.deepEqual(commands,[['dotpilot.panel.toggleVisibility']]);
-});
-
 test('Stop while a previous browser is closing cancels the queued launch',async()=>{
   const {c}=harness(); c.runTask=undefined;
   let finish;

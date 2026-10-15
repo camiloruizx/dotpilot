@@ -628,7 +628,7 @@ const tests = [
       console.log('[dotpilot] comandos del contenedor:', JSON.stringify(known));
       assert.ok(known.length > 0, 'VS Code no registró el contenedor de DotPilot');
       await vscode.commands.executeCommand(known[0]);
-      await vscode.commands.executeCommand('dotpilot.showPanel');
+      await vscode.commands.executeCommand('dotpilot.panel.focus');
     }
   },
 ];

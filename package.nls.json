@@ -29,8 +29,6 @@
   "dotpilot.stepInto": "Step into",
   "dotpilot.stepOut": "Step out",
   "dotpilot.continue": "Continue debugging",
-  "dotpilot.showPanel": "Show DotPilot panel",
-  "dotpilot.hidePanel": "Hide DotPilot panel",
   "dotpilot.showSettings": "Open DotPilot settings",
   "dotpilot.compile.label": "Build & test",
   "dotpilot.launchOptions.label": "Project",

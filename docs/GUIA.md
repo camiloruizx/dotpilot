@@ -189,7 +189,6 @@ Selecciona **Navegador web** debajo del perfil, o abre **DotPilot → Navegador 
 
 Para aligerarlo, el panel se carga al abrirlo, los controles inferiores se crean solo al habilitarlos y se evitan mensajes repetidos o hacia paneles ocultos. Las traducciones se envían únicamente al inicializar el panel o cambiar el idioma. El ícono de distribución pasa de 1254 × 1254 a 128 × 128. No se añadieron dependencias de ejecución. El tiempo de activación puede variar según equipo y proyecto.
 
-
 **Creado por Camilo Ruiz · [acrocode.dev](https://acrocode.dev) · [GitHub: camiloruizx](https://github.com/camiloruizx)**
 
 Controles en inglés y español para trabajar con proyectos .NET desde un menú propio de DotPilot y un panel con las pestañas Ejecución y Ajustes.
@@ -207,13 +206,11 @@ Necesitas **SDK .NET 8 o posterior**, VS Code 1.85 o posterior y, para depurar, 
 
 ## Controles superiores
 
-Con un proyecto .NET abierto, aparece primero el menú azul de **DotPilot** y después los botones directos **Ejecutar sin depurar**, **Pausar / Continuar** (durante la depuración) y **Detener**, arriba a la derecha del editor. El menú agrupa las demás acciones de Ejecución, Proyecto, Compilación y pruebas, Mostrar/Ocultar panel y Ajustes. Así se distinguen las acciones de DotPilot de las otras extensiones. Los controles directos siguen disponibles dentro del panel y mediante los atajos.
+Con un proyecto .NET abierto, aparece primero el menú azul de **DotPilot** y después los botones directos **Ejecutar sin depurar**, **Pausar / Continuar** (durante la depuración) y **Detener**, arriba a la derecha del editor. El menú agrupa las demás acciones de Ejecución, Proyecto, Compilación y pruebas y Ajustes. Así se distinguen las acciones de DotPilot de las otras extensiones. Los controles directos siguen disponibles dentro del panel y mediante los atajos.
 
 VS Code no expone a extensiones la zona de la barra de título junto a «Try Agents Window». Se utiliza la barra del editor admitida por la API oficial. Si no se ve, abre un archivo y comprueba que las acciones del editor estén visibles en tu diseño de VS Code.
 
 Puedes desactivar la barra superior con **DotPilot: Show Editor Toolbar** y activar los controles inferiores con **DotPilot: Show Status Bar**.
-
-El menú de DotPilot y la paleta muestran **Mostrar panel DotPilot** cuando está oculto y **Ocultar panel DotPilot** cuando está visible. El estado también se actualiza al plegar el panel o esconder la barra lateral. Ocultar el panel mantiene la aplicación en ejecución.
 
 ## Idioma y ajustes
 
@@ -333,7 +330,6 @@ Consulta los archivos VALIDACION.md y CHANGELOG.md incluidos en el código fuent
 Los módulos de `src/controller/` exportan una función que recibe sus dependencias (incluido `vscode`) y devuelve métodos; así las pruebas unitarias los ejecutan con un VS Code simulado. La lógica sin VS Code está aparte y se prueba directamente: `detect.js`, `runner.js`, `laragon.js`, `bridge.js`, `agent.js`, `agent-tools.js`, `assistants.js`, `core.js`.
 
 Referencias: [API de VS Code](https://code.visualstudio.com/api/references/vscode-api), [depuración C#](https://code.visualstudio.com/docs/csharp/debugger-settings), [dotnet watch](https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-watch).
-
 
 ## Desinstalación
 
