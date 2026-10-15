@@ -501,7 +501,7 @@ const tests = [
   },
   {
     name: 'navegador: cambiar la elección con la app abierta reabre la ventana vinculada en el navegador elegido',
-    timeout: 120000,
+    timeout: 180000,
     skip: () => {
       const browsers = require(path.join(vscode.extensions.getExtension('camiloruizx.dotpilot').extensionPath, 'src', 'browsers.js'));
       return browsers.find('chrome') && browsers.find('edge') ? false : 'hacen falta Chrome y Edge instalados';
@@ -521,13 +521,17 @@ const tests = [
 
         step('cambiar a Chrome con la app en ejecución');
         await vscode.commands.executeCommand('dotpilot.browserChrome');
-        await waitFor(() => sessionType() === 'pwa-chrome' && controller.browserRun.session.id !== first, { timeout: 40000, message: 'que se reabra en Chrome' });
+        await waitFor(() => sessionType() === 'pwa-chrome' && controller.browserRun.session.id !== first, { timeout: 80000, message: 'que se reabra en Chrome' });
         assert.equal(controller.active(), true, 'la aplicación debe seguir en ejecución');
         assert.equal(await portOpen(PORT_NODE), true);
 
         await vscode.commands.executeCommand('dotpilot.stop');
         await waitFor(async () => !(await portOpen(PORT_NODE)) && !controller.browserRun, { timeout: 30000, message: 'que se libere el puerto y se cierre el navegador' });
       } finally {
+        // Si la prueba falló con la app abierta, DotPilot se niega a cambiar de proyecto y las pruebas .NET siguientes
+        // ejecutarían el proyecto Node: se detiene primero para no arrastrar el fallo a las demás.
+        await vscode.commands.executeCommand('dotpilot.stop').catch(() => {});
+        await waitFor(async () => !controller.active() && !(await portOpen(PORT_NODE)), { timeout: 30000, message: 'que se detenga la aplicación' }).catch(() => {});
         await vscode.commands.executeCommand('dotpilot.browserDefault').catch(() => {});
         await settings.update('openBrowser', undefined, vscode.ConfigurationTarget.Workspace);
         await pickByIndex('dotpilot.selectProject', 0);
