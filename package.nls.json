@@ -82,5 +82,8 @@
   "dotpilot.laragonPath.description": "Laragon install folder (for example C:\\laragon). Leave empty to detect it from the project or common locations.",
   "dotpilot.manageCompanions": "Manage companion APIs",
   "dotpilot.packageVsix": "Package VS Code extension (VSIX)",
-  "dotpilot.packageApk": "Build Android APK (Expo)"
+  "dotpilot.packageApk": "Build Android APK (Expo)",
+  "dotpilot.runApi": "Run companion API",
+  "dotpilot.stopApi": "Stop companion API",
+  "dotpilot.selectCompanionMode": "Select how companion APIs run"
 }

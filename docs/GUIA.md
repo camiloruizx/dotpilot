@@ -66,6 +66,7 @@ If your web project calls an API that lives in another project (even in another 
 1. In the panel, open **Companion APIs** (or run **DotPilot: Manage companion APIs**) and choose **Add API…**. DotPilot suggests the workspace API whose port your `appsettings*.json` calls, or you can **Browse…** for any `.csproj`.
 2. On **Run**, **Debug** or **Hot Reload**, DotPilot starts each API in its own terminal (`API <name>`), waits until it listens (up to 90 s), then starts your project. **Stop** ends both; if your project exits on its own, the APIs are stopped too.
 3. An API that is already listening on its port is reused and left running.
+4. **How the APIs run** appears once you have an API. **Together with the project** (default) works as described: Run starts both and Stop closes both. **Separately** makes Run, Debug and Stop affect only your project, and adds **Run API** / **Stop API** buttons (and menu entries) for the API: the API keeps running when you close the application, and the next Run of the project does not wait for it. Use it when you do not need to restart the API every time.
 
 The first time you run a project whose `appsettings*.json` points to a `localhost` address that is not its own, DotPilot asks once whether to add that API. With **Debug**, only the main project is debugged; the API runs without the debugger.
 
@@ -171,6 +172,7 @@ Si tu proyecto web consume una API que vive en otro proyecto (incluso en otra so
 1. En el panel abre **APIs complementarias** (o ejecuta **DotPilot: Administrar APIs complementarias**) y elige **Agregar API…**. DotPilot sugiere la API del espacio de trabajo cuyo puerto llama tu `appsettings*.json`, o puedes **Examinar…** cualquier `.csproj`.
 2. Al **Ejecutar**, **Depurar** o usar **Hot Reload**, DotPilot inicia cada API en su propia terminal (`API <nombre>`), espera a que escuche (hasta 90 s) y luego inicia tu proyecto. **Detener** cierra ambos; si tu proyecto termina por sí solo, las APIs también se detienen.
 3. Una API que ya está escuchando en su puerto se reutiliza y no se cierra.
+4. Al tener una API aparece **Ejecución de las APIs**. **Juntas con el proyecto** (predeterminado) funciona como se describió: Ejecutar inicia ambos y Detener cierra ambos. **Por separado** hace que Ejecutar, Depurar y Detener afecten solo a tu proyecto y agrega los botones **Ejecutar API** / **Detener API** (y entradas en el menú) para la API: la API sigue corriendo al cerrar la aplicación y la siguiente ejecución del proyecto no la espera. Úsalo cuando no necesitas reiniciar la API cada vez.
 
 La primera vez que ejecutas un proyecto cuyo `appsettings*.json` apunta a una dirección `localhost` que no es suya, DotPilot pregunta una vez si quieres agregar esa API. Con **Depurar**, solo se depura el proyecto principal; la API corre sin depurador.
 

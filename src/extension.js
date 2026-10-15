@@ -14,11 +14,11 @@ const EXCLUDE = '**/{bin,obj,node_modules,.git}/**';
 const EXCLUDE_APPS = '**/{bin,obj,node_modules,.git,vendor,.venv,venv,__pycache__,.next,.nuxt}/**';
 const NOISE = /[\\/](?:node_modules|\.git|vendor|\.venv|venv|__pycache__)[\\/]/;
 // Acciones que solo tienen sentido con un proyecto .NET seleccionado.
-const DOTNET_ONLY = new Set(['manageCompanions', 'debug', 'watch', 'selectConfiguration', 'selectFramework', 'selectTarget', 'diagnostics', 'buildMenu', 'build', 'rebuild', 'clean', 'restore', 'test', 'analyze']);
+const DOTNET_ONLY = new Set(['manageCompanions', 'selectCompanionMode', 'runApi', 'stopApi', 'debug', 'watch', 'selectConfiguration', 'selectFramework', 'selectTarget', 'diagnostics', 'buildMenu', 'build', 'rebuild', 'clean', 'restore', 'test', 'analyze']);
 const LABELS = { build: 'Compilar', rebuild: 'Recompilar', clean: 'Limpiar', restore: 'Restaurar NuGet', test: 'Ejecutar pruebas', analyze: 'Analizar código' };
 const BROWSERS = { edge: 'Microsoft Edge', chrome: 'Google Chrome', external: 'Predeterminado del sistema' };
 const ACTIONS = ['run', 'debug', 'watch', 'showSettings', 'advancedSettings', 'continue', 'pause', 'stop', 'restart', ...Object.keys(LABELS), 'selectProject', 'selectProfile', 'selectConfiguration', 'selectFramework', 'selectTarget', 'refresh', 'buildMenu', 'openBrowser', 'editProfile', 'showOutput', 'showProblems', 'diagnostics', 'stepOver', 'stepInto', 'stepOut'];
-ACTIONS.push('selectBrowser', 'browserEdge', 'browserChrome', 'browserExternal', 'browserDefault', 'connectAssistants', 'manageCompanions', 'packageVsix', 'packageApk');
+ACTIONS.push('selectBrowser', 'browserEdge', 'browserChrome', 'browserExternal', 'browserDefault', 'connectAssistants', 'manageCompanions', 'selectCompanionMode', 'runApi', 'stopApi', 'packageVsix', 'packageApk');
 class CancelledOperation extends Error { constructor() { super('Operation stopped.'); } }
 
 function portIsOpen(endpoint) {
@@ -40,6 +40,9 @@ class Controller {
     this.app = undefined;
     this.appProcess = undefined;
     this.companions = [];
+    this.apiTasks = new Set();
+    this.apiGeneration = 0;
+    this.apiStarting = false;
     this.listeningUrl = undefined;
     this.occupiedAtLaunch = false;
     this.refreshing = undefined;
@@ -103,7 +106,7 @@ class Controller {
     const startListener = (terminal ? vscode.tasks.onDidStartTask : vscode.tasks.onDidStartTaskProcess)(event => {
       if (event.execution.task.definition.id === id) {
         started(); startListener.dispose();
-        if (generation !== this.generation) event.execution.terminate();
+        if (generation !== this.generation && secondary !== 'api') event.execution.terminate();
       }
     });
     const processListener = vscode.tasks.onDidEndTaskProcess(event => {
@@ -119,18 +122,19 @@ class Controller {
       if (event.execution.task.definition.id !== id) return;
       ended = true;
       this.tasks.delete(event.execution);
+      this.apiTasks.delete(event.execution);
       if (this.runTask === event.execution) {
         this.runTask = undefined; this.cancelBrowserMonitor();
         void this.closeBrowser().catch(error => this.output.appendLine(error.message));
         // Si el proyecto principal termina por sí mismo, sus APIs no quedan huérfanas.
-        if (generation === this.generation) void this.stopCompanions();
+        if (generation === this.generation && this.companionMode() === 'together') void this.stopCompanions();
       }
       setTimeout(() => { finish(exitCode); started(); startListener.dispose(); processListener.dispose(); endListener.dispose(); this.render(); }, 0);
     });
     try {
       const execution = await vscode.tasks.executeTask(task);
       if (!ended) {
-        this.tasks.add(execution);
+        if (secondary === 'api') this.apiTasks.add(execution); else this.tasks.add(execution);
         if (running && !secondary) this.runTask = execution;
       }
       this.render();
@@ -161,12 +165,16 @@ class Controller {
     // APIs complementarias: se inician (y se espera a que escuchen) antes del proyecto principal.
     await this.offerCompanions(generation);
     if (cancelled()) return;
+    // Por separado, las APIs tienen sus propios botones (runApi/stopApi) y este flujo no las toca.
+    const together = this.companionMode() === 'together';
     try {
-      await this.startCompanions(generation);
-      if (cancelled()) return;
+      if (together) {
+        await this.startCompanions(cancelled);
+        if (cancelled()) return;
+      }
       await this.launchDotnet(mode, framework, generation);
     } catch (error) {
-      await this.stopCompanions();
+      if (together) await this.stopCompanions();
       throw error;
     }
   }
@@ -230,7 +238,8 @@ class Controller {
     this.listeningUrl = undefined;
     const session = this.session;
     const tasks = [...this.tasks];
-    const pending = [this.closeBrowser(), this.stopCompanions()];
+    const pending = [this.closeBrowser()];
+    if (this.companionMode() === 'together') pending.push(this.stopCompanions());
     if (this.appProcess && !this.appProcess.exited) pending.push(this.appProcess.stop());
     if (session) pending.push(new Promise((resolve, reject) => {
       const timer = setTimeout(() => { listener.dispose(); reject(new Error(this.t('El depurador no terminó a tiempo.'))); }, 10000);
@@ -265,6 +274,9 @@ class Controller {
       this.assertTrusted();
       if (this.app && DOTNET_ONLY.has(action)) this.assertDotnet();
       if (action === 'stop') return await this.stop();
+      // Las APIs por separado tienen su propio ciclo: no esperan a que termine otra operación.
+      if (action === 'runApi') return await this.runApi();
+      if (action === 'stopApi') return await this.stopApi();
       if (action === 'pause' || action === 'continue') return await this.pause();
       if (['stepOver', 'stepInto', 'stepOut'].includes(action)) return await this.step(action);
       if (action === 'openBrowser') return await this.openBrowser();
@@ -280,6 +292,7 @@ class Controller {
       else if (action === 'selectFramework') { if (await this.ensureProject()) { if (this.active()) throw new Error(this.t('Detén la ejecución antes de cambiar el framework.')); await this.framework(true); } }
       else if (action === 'selectTarget') await this.selectTarget();
       else if (action === 'manageCompanions') await this.manageCompanions();
+      else if (action === 'selectCompanionMode') await this.selectCompanionMode();
       else if (action === 'packageVsix' || action === 'packageApk') await this.packageProject(action);
       else if (action === 'editProfile') await this.editProfile();
       else if (action === 'diagnostics') { if (await this.ensureProject()) await this.executeTask(this.t('Información del SDK .NET'), ['--info'], this.project); }
@@ -326,7 +339,7 @@ function activate(context) {
     controller.browserTerminated(session);
     if (controller.session?.id === session.id) {
       controller.session = undefined; controller.paused = false; controller.stoppedThread = undefined; controller.render();
-      void controller.stopCompanions();
+      if (controller.companionMode() === 'together') void controller.stopCompanions();
       void controller.closeBrowser().catch(error => controller.output.appendLine(error.message));
     }
   }));

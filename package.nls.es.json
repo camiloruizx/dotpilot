@@ -82,5 +82,8 @@
   "dotpilot.laragonPath.description": "Carpeta de instalación de Laragon (por ejemplo C:\\laragon). Vacío la detecta desde el proyecto o rutas habituales.",
   "dotpilot.manageCompanions": "Administrar APIs complementarias",
   "dotpilot.packageVsix": "Empaquetar extensión de VS Code (VSIX)",
-  "dotpilot.packageApk": "Generar APK de Android (Expo)"
+  "dotpilot.packageApk": "Generar APK de Android (Expo)",
+  "dotpilot.runApi": "Ejecutar API complementaria",
+  "dotpilot.stopApi": "Detener API complementaria",
+  "dotpilot.selectCompanionMode": "Elegir cómo se ejecutan las APIs complementarias"
 }

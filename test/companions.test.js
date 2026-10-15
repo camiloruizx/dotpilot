@@ -93,7 +93,7 @@ function setup({ portOpen = false, props = { OutputType: 'Exe', TargetFramework:
     context: { workspaceState: { get: (key, fallback) => state.has(key) ? state.get(key) : fallback, update: async (key, value) => { value === undefined ? state.delete(key) : state.set(key, value); } } },
     project: { fsPath: path.join(web, 'Web.csproj'), toString: () => 'file:///web' }, app: undefined,
     projects: [{ fsPath: path.join(web, 'Web.csproj') }, { fsPath: path.join(api, 'Api.csproj') }],
-    profiles: [{ name: 'https', url: 'https://localhost:7050' }], configuration: 'Debug', generation: 1, companions: [], result: '', resultError: false,
+    profiles: [{ name: 'https', url: 'https://localhost:7050' }], configuration: 'Debug', generation: 1, companions: [], apiTasks: new Set(), apiGeneration: 0, apiStarting: false, result: '', resultError: false,
     output: { appendLine: line => notices.push(line) }, render() {}, active: () => false, assertDotnet() {}, ensureProject: async () => true,
     t: (message, ...values) => message.replace(/\{(\d+)\}/g, (_, i) => values[i]),
     config: () => ({ get: (key, fallback) => fallback }), terminalEnv: () => ({}), browser: () => 'edge',
@@ -136,7 +136,7 @@ test('the first run offers the detected API once and remembers the answer', asyn
 test('an API that is already listening is reused and nothing is started', async t => {
   const h = setup({ portOpen: true }); t.after(h.cleanup);
   await h.self.saveCompanions([{ project: path.join(h.api, 'Api.csproj'), profile: 'https' }]);
-  await h.self.startCompanions(1);
+  await h.self.startCompanions(() => false);
   assert.equal(h.executed.length, 0);
   assert.match(h.notices[0], /ya está en ejecución en el puerto 7100; se reutiliza/);
 });
@@ -146,14 +146,14 @@ test('an API is started with its own profile and the project waits until it repo
   const project = path.join(h.api, 'Api.csproj');
   await h.self.saveCompanions([{ project, profile: 'https' }]);
   h.self.executeTask = async (...args) => { h.executed.push(args); setTimeout(() => { h.terminals[0].companion.url = 'https://localhost:7100'; }, 20); };
-  await h.self.startCompanions(1);
+  await h.self.startCompanions(() => false);
   assert.equal(h.self.queried, project);
   const spec = h.terminals[0].spec;
   assert.equal(spec.command, 'dotnet');
   assert.deepEqual(spec.args, ['run', '--project', project, '--configuration', 'Debug', '--launch-profile', 'https', '--framework', 'net8.0']);
   assert.equal(spec.cwd, path.dirname(project));
   assert.equal(h.executed[0][0], 'API Api');
-  assert.equal(h.executed[0][5], true, 'runs as a secondary task, not as the main run');
+  assert.equal(h.executed[0][5], 'api', 'runs as a secondary task, not as the main run');
   assert.equal(h.self.companions.length, 1);
 });
 
@@ -161,15 +161,15 @@ test('an API that exits before it is ready fails the launch with its exit code',
   const h = setup(); t.after(h.cleanup);
   await h.self.saveCompanions([{ project: path.join(h.api, 'Api.csproj'), profile: 'http' }]);
   h.self.executeTask = async () => { setTimeout(() => { h.terminals[0].companion.exitCode = 3; }, 10); };
-  await assert.rejects(() => h.self.startCompanions(1), /La API Api terminó con código 3 antes de estar lista/);
+  await assert.rejects(() => h.self.startCompanions(() => false), /La API Api terminó con código 3 antes de estar lista/);
 });
 
 test('a missing project or a library is reported clearly', async t => {
   const h = setup({ props: { OutputType: 'Library', TargetFramework: 'net8.0' } }); t.after(h.cleanup);
   await h.self.saveCompanions([{ project: path.join(h.dir, 'Gone', 'Gone.csproj'), profile: '' }]);
-  await assert.rejects(() => h.self.startCompanions(1), /No se encontró el proyecto de la API/);
+  await assert.rejects(() => h.self.startCompanions(() => false), /No se encontró el proyecto de la API/);
   await h.self.saveCompanions([{ project: path.join(h.api, 'Api.csproj'), profile: '' }]);
-  await assert.rejects(() => h.self.startCompanions(1), /debe ser una aplicación ejecutable/);
+  await assert.rejects(() => h.self.startCompanions(() => false), /debe ser una aplicación ejecutable/);
 });
 
 test('a ready API opens its Swagger in the chosen browser unless disabled, and reused APIs do not reopen it', async t => {
@@ -178,20 +178,20 @@ test('a ready API opens its Swagger in the chosen browser unless disabled, and r
   fs.writeFileSync(project, '<Project Sdk="Microsoft.NET.Sdk.Web"><ItemGroup><PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" /></ItemGroup></Project>');
   h.self.executeTask = async () => { setTimeout(() => { h.terminals.at(-1).companion.url = 'https://localhost:7100'; }, 10); };
   await h.self.saveCompanions([{ project, profile: 'https' }]);
-  await h.self.startCompanions(1);
+  await h.self.startCompanions(() => false);
   assert.deepEqual(h.opened, [['edge', 'https://localhost:7100/swagger']]);
   // El usuario puede desactivarlo para esa API.
   h.opened.length = 0;
   await h.self.saveCompanions([{ project, profile: 'https', browse: false }]);
-  await h.self.startCompanions(1);
+  await h.self.startCompanions(() => false);
   assert.deepEqual(h.opened, []);
   // Sin Swagger ni launchBrowser en el perfil, no se abre nada por omisión; con `browse: true` abre la raíz.
   fs.writeFileSync(project, '<Project Sdk="Microsoft.NET.Sdk.Web"></Project>');
   await h.self.saveCompanions([{ project, profile: 'https' }]);
-  await h.self.startCompanions(1);
+  await h.self.startCompanions(() => false);
   assert.deepEqual(h.opened, []);
   await h.self.saveCompanions([{ project, profile: 'https', browse: true }]);
-  await h.self.startCompanions(1);
+  await h.self.startCompanions(() => false);
   assert.deepEqual(h.opened, [['edge', 'https://localhost:7100/']]);
 });
 
@@ -200,7 +200,7 @@ test('an API that was already running is reused without opening a second browser
   const project = path.join(h.api, 'Api.csproj');
   fs.writeFileSync(project, '<Project Sdk="Microsoft.NET.Sdk.Web"><ItemGroup><PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" /></ItemGroup></Project>');
   await h.self.saveCompanions([{ project, profile: 'https' }]);
-  await h.self.startCompanions(1);
+  await h.self.startCompanions(() => false);
   assert.deepEqual(h.opened, []);
 });
 
@@ -214,4 +214,62 @@ test('an API cannot be added twice or be the project itself, and stopCompanions 
   await h.self.stopCompanions();
   assert.deepEqual(stopped, ['a']);
   assert.deepEqual(h.self.companions, []);
+});
+
+test('the run mode is per project, defaults to together and can be switched to separate', async t => {
+  const h = setup(); t.after(h.cleanup);
+  assert.equal(h.self.companionMode(), 'together');
+  await assert.rejects(() => h.self.selectCompanionMode(), /No hay APIs complementarias/);
+  await h.self.saveCompanions([{ project: path.join(h.api, 'Api.csproj'), profile: 'http' }]);
+  h.vscode.window.showQuickPick = async items => items.find(item => item.value === 'separate');
+  await h.self.selectCompanionMode();
+  assert.equal(h.self.companionMode(), 'separate');
+  h.vscode.window.showQuickPick = async items => items.find(item => item.value === 'together');
+  await h.self.selectCompanionMode();
+  assert.equal(h.self.companionMode(), 'together');
+  assert.equal(h.state.has('companionMode:file:///web'), false, 'together is the default and is not stored');
+});
+
+test('Run API starts only the APIs, tracks them as running and Stop API ends them without touching the project', async t => {
+  const h = setup(); t.after(h.cleanup);
+  const project = path.join(h.api, 'Api.csproj');
+  await h.self.saveCompanions([{ project, profile: 'http' }]);
+  await assert.rejects(() => h.self.runApi(), /junto con el proyecto/);
+  h.state.set('companionMode:file:///web', 'separate');
+  const stops = [];
+  h.self.executeTask = async (...args) => {
+    h.executed.push(args);
+    const companion = h.terminals.at(-1).companion;
+    companion.proc = { exited: false, stop: async () => { stops.push('api'); companion.proc.exited = true; } };
+    setTimeout(() => { companion.url = 'http://localhost:5100'; }, 10);
+  };
+  assert.equal(h.self.apiRunning(), false);
+  await h.self.runApi();
+  assert.equal(h.executed[0][5], 'api', 'the API task is tracked apart from the project tasks');
+  assert.equal(h.self.apiRunning(), true);
+  assert.equal(h.self.apiStarting, false);
+  await assert.rejects(() => h.self.runApi(), /ya está en ejecución/);
+  // El Ejecutar/Detener del proyecto no cambia la generación de la API.
+  const generation = h.self.apiGeneration;
+  h.self.generation++;
+  assert.equal(h.self.apiGeneration, generation);
+  await h.self.stopApi();
+  assert.deepEqual(stops, ['api']);
+  assert.equal(h.self.apiRunning(), false);
+});
+
+test('a project run that starts while the API is still starting does not cancel the API start', async t => {
+  const h = setup(); t.after(h.cleanup);
+  const project = path.join(h.api, 'Api.csproj');
+  await h.self.saveCompanions([{ project, profile: 'http' }]);
+  h.state.set('companionMode:file:///web', 'separate');
+  h.self.queryProperties = async (framework, properties, file, independent) => {
+    assert.equal(independent, true, 'the API query must not depend on the project generation');
+    h.self.generation++;
+    return { OutputType: 'Exe', TargetFramework: 'net8.0' };
+  };
+  h.self.executeTask = async () => { setTimeout(() => { h.terminals.at(-1).companion.url = 'http://localhost:5100'; }, 10); };
+  await h.self.runApi();
+  assert.equal(h.self.companions.length, 1);
+  assert.equal(h.self.result, '');
 });

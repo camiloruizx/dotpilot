@@ -167,16 +167,72 @@ module.exports = ({ vscode, path, fs, portIsOpen, profilesFrom, localEndpoint, r
       }
     },
 
-    // Inicia las APIs en orden y espera a que cada una esté escuchando. Lanza si alguna falla.
-    async startCompanions(generation) {
-      for (const entry of this.companionList()) {
-        if (generation !== this.generation) return;
-        await this.startCompanion(entry, generation);
+    // 'together': las APIs se inician y se detienen con el proyecto. 'separate': tienen sus propios Ejecutar/Detener.
+    companionMode() {
+      if (!this.project || this.app) return 'together';
+      return this.context.workspaceState.get(`companionMode:${this.project.toString()}`) === 'separate' ? 'separate' : 'together';
+    },
+
+    // ¿Hay alguna API en ejecución (o arrancando) iniciada por DotPilot?
+    apiRunning() {
+      return !!this.apiStarting || this.companions.some(state => state.proc && !state.proc.exited);
+    },
+
+    async selectCompanionMode() {
+      if (this.active()) throw new Error(this.t('Detén la ejecución antes de cambiar las APIs.'));
+      if (!(await this.ensureProject())) return;
+      this.assertDotnet();
+      if (!this.companionList().length) throw new Error(this.t('No hay APIs complementarias configuradas.'));
+      const current = this.companionMode();
+      const choice = await vscode.window.showQuickPick([
+        { label: this.t('Juntas con el proyecto'), description: current === 'together' ? this.t('Seleccionado') : '', detail: this.t('Ejecutar inicia ambos y Detener cierra ambos.'), value: 'together' },
+        { label: this.t('Por separado'), description: current === 'separate' ? this.t('Seleccionado') : '', detail: this.t('Ejecutar y Detener solo afectan al proyecto; la API tiene sus propios botones.'), value: 'separate' }
+      ], { title: this.t('Ejecución de las APIs'), placeHolder: this.t('Elige cómo se ejecutan las APIs complementarias') });
+      if (!choice) return;
+      await this.context.workspaceState.update(`companionMode:${this.project.toString()}`, choice.value === 'together' ? undefined : choice.value);
+      this.render();
+    },
+
+    // Inicia las APIs (modo por separado) sin tocar el proyecto principal.
+    async runApi() {
+      if (!(await this.ensureProject())) return;
+      this.assertDotnet();
+      if (!this.companionList().length) throw new Error(this.t('No hay APIs complementarias configuradas.'));
+      if (this.companionMode() !== 'separate') throw new Error(this.t('Las APIs se inician junto con el proyecto. Elige «Por separado» para ejecutarlas aparte.'));
+      if (this.apiRunning()) throw new Error(this.t('La API ya está en ejecución.'));
+      const token = ++this.apiGeneration;
+      this.apiStarting = true;
+      this.render();
+      try {
+        await this.startCompanions(() => token !== this.apiGeneration, true);
+      } catch (error) {
+        await this.stopCompanions();
+        throw error;
+      } finally {
+        this.apiStarting = false;
+        this.render();
       }
     },
 
-    async startCompanion(entry, generation) {
-      const cancelled = () => generation !== this.generation;
+    async stopApi() {
+      this.apiGeneration++;
+      this.apiStarting = false;
+      await this.stopCompanions();
+      this.result = '';
+      this.render();
+    },
+
+    // Inicia las APIs en orden y espera a que cada una esté escuchando. Lanza si alguna falla.
+    // `cancelled` indica si la espera ya no vale; `independent`, que la API tiene su propio ciclo de vida.
+    async startCompanions(cancelled, independent = false) {
+      for (const entry of this.companionList()) {
+        if (cancelled()) return;
+        await this.startCompanion(entry, cancelled, independent);
+      }
+    },
+
+    async startCompanion(entry, cancelled, independent = false) {
+      const generation = this.generation;
       const name = companionName(entry.project);
       try { await fs.access(entry.project); }
       catch { throw new Error(this.t('No se encontró el proyecto de la API: {0}. Quítalo o corrígelo en APIs complementarias.', entry.project)); }
@@ -189,7 +245,7 @@ module.exports = ({ vscode, path, fs, portIsOpen, profilesFrom, localEndpoint, r
       }
       if (cancelled()) return;
       this.result = this.t('Iniciando API {0}…', name); this.resultError = false; this.render();
-      const props = await this.queryProperties('', ['TargetFramework', 'TargetFrameworks', 'OutputType'], entry.project);
+      const props = await this.queryProperties('', ['TargetFramework', 'TargetFrameworks', 'OutputType'], entry.project, independent);
       if (cancelled()) return;
       if (!['Exe', 'WinExe'].includes(props.OutputType)) throw new Error(this.t('La API {0} debe ser una aplicación ejecutable, no una biblioteca.', name));
       const framework = (props.TargetFramework || props.TargetFrameworks || '').split(';').filter(Boolean)[0] || '';
@@ -200,7 +256,7 @@ module.exports = ({ vscode, path, fs, portIsOpen, profilesFrom, localEndpoint, r
         env: { ...this.terminalEnv(), DOTNET_WATCH_SUPPRESS_LAUNCH_BROWSER: '1', DOTNET_SYSTEM_CONSOLE_ALLOW_ANSI_COLOR_REDIRECTION: '1' }
       }, generation, state);
       this.companions.push(state);
-      await this.executeTask(`API ${name}`, [], this.project, true, terminal, true);
+      await this.executeTask(`API ${name}`, [], this.project, true, terminal, 'api');
       const outcome = await waitForReady({
         isOpen: endpoint ? () => portIsOpen(endpoint) : undefined,
         urlSeen: () => !!state.url, exited: () => state.exitCode !== undefined, cancelled, timeout: READY_TIMEOUT
@@ -223,6 +279,7 @@ module.exports = ({ vscode, path, fs, portIsOpen, profilesFrom, localEndpoint, r
       const list = this.companions;
       this.companions = [];
       await Promise.allSettled(list.map(state => state.proc?.stop()));
+      for (const execution of [...this.apiTasks]) execution.terminate();
     }
   };
 };

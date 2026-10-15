@@ -15,14 +15,15 @@ module.exports = ({ vscode, path, execFile, CancelledOperation, LABELS, buildArg
     vscode.window.setStatusBarMessage('DotPilot: ' + this.t('{0} completado', this.t(LABELS[action])), 4000);
   },
 
-  queryProperties(framework, properties, project = this.project.fsPath) {
+  // `independent`: consulta de una API que se inicia por separado; ni Detener ni Ejecutar del proyecto principal la cancelan.
+  queryProperties(framework, properties, project = this.project.fsPath, independent = false) {
     const generation = this.generation;
     return new Promise((resolve, reject) => {
       const args = ['msbuild', project, '-nologo', `-getProperty:${properties.join(',')}`, `-p:Configuration=${this.configuration}`];
       if (framework) args.push(`-p:TargetFramework=${framework}`);
       const child = execFile(this.config().get('dotnetPath', 'dotnet'), args, { cwd: path.dirname(project), timeout: 30000, maxBuffer: 4 * 1024 * 1024, windowsHide: true }, (error, stdout, stderr) => {
         if (this.queryProcess === child) this.queryProcess = undefined;
-        if (generation !== this.generation) { reject(new CancelledOperation()); return; }
+        if (!independent && generation !== this.generation) { reject(new CancelledOperation()); return; }
         if (error) {
           this.output.appendLine(`${stdout}\n${stderr}`);
           reject(new Error(this.t('No se pudo consultar el proyecto. Revisa el SDK de .NET y la salida de DotPilot.')));
@@ -31,7 +32,7 @@ module.exports = ({ vscode, path, execFile, CancelledOperation, LABELS, buildArg
         try { resolve(JSON.parse(stdout.trim()).Properties); }
         catch { this.output.appendLine(stdout); reject(new Error(this.t('Se requiere un SDK .NET 8 o posterior para consultar el proyecto.'))); }
       });
-      this.queryProcess = child;
+      if (!independent) this.queryProcess = child;
     });
   },
 

@@ -115,6 +115,49 @@ const tests = [
     }
   },
   {
+    name: 'API complementaria por separado: Ejecutar solo inicia el proyecto, la API tiene su Ejecutar/Detener y sobrevive al proyecto',
+    timeout: 240000,
+    fn: async () => {
+      const controller = await getController();
+      const PORT_API = 5191;
+      assert.equal(await portOpen(PORT_API), false, 'el puerto 5191 ya estaba ocupado antes de la prueba');
+      const api = fs.mkdtempSync(path.join(require('node:os').tmpdir(), 'dotpilot-api-'));
+      fs.mkdirSync(path.join(api, 'Properties'));
+      fs.writeFileSync(path.join(api, 'ApiSample.csproj'), fs.readFileSync(path.join(fixtureDir, 'WebSample.csproj'), 'utf8'));
+      fs.writeFileSync(path.join(api, 'Program.cs'), ['var app = WebApplication.CreateBuilder(args).Build();', 'app.MapGet("/", () => "dotpilot-api");', 'app.Run();'].join(String.fromCharCode(10)));
+      fs.writeFileSync(path.join(api, 'Properties', 'launchSettings.json'), JSON.stringify({ profiles: { http: { commandName: 'Project', launchBrowser: false, applicationUrl: `http://localhost:${PORT_API}` } } }));
+      const modeKey = `companionMode:${controller.project.toString()}`;
+      try {
+        await controller.saveCompanions([{ project: path.join(api, 'ApiSample.csproj'), profile: 'http' }]);
+        await controller.context.workspaceState.update(modeKey, 'separate');
+        // Ejecutar inicia solo el proyecto.
+        await vscode.commands.executeCommand('dotpilot.run');
+        await waitFor(() => portOpen(PORT_HTTP), { timeout: 120000, message: 'que el proyecto escuche en 5187' });
+        assert.equal(await portOpen(PORT_API), false, 'en modo por separado la API no debe iniciarse con el proyecto');
+        assert.equal(controller.apiRunning(), false);
+        // La API se inicia aparte, sin tocar al proyecto.
+        await controller.invoke('runApi');
+        await waitFor(() => portOpen(PORT_API), { timeout: 120000, message: 'que la API escuche en 5191' });
+        assert.equal(controller.apiRunning(), true);
+        assert.equal(controller.active(), true, 'el proyecto sigue en ejecución');
+        // Detener el proyecto no cierra la API.
+        await vscode.commands.executeCommand('dotpilot.stop');
+        await waitFor(async () => !(await portOpen(PORT_HTTP)), { timeout: 30000, message: 'que se libere 5187' });
+        assert.equal(await portOpen(PORT_API), true, 'la API debe seguir corriendo');
+        assert.equal(controller.apiRunning(), true);
+        // Detener API cierra la API.
+        await controller.invoke('stopApi');
+        await waitFor(async () => !(await portOpen(PORT_API)), { timeout: 30000, message: 'que se libere 5191' });
+        assert.equal(controller.apiRunning(), false);
+      } finally {
+        await controller.stopCompanions();
+        await controller.context.workspaceState.update(modeKey, undefined);
+        await controller.saveCompanions([]);
+        fs.rmSync(api, { recursive: true, force: true, maxRetries: 8, retryDelay: 250 });
+      }
+    }
+  },
+  {
     name: 'API complementaria con depuración: la API corre sin depurador y Detener libera los dos',
     skip: () => (hasCSharp() ? false : 'falta la extensión C# (ms-dotnettools.csharp)'),
     timeout: 240000,

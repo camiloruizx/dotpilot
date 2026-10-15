@@ -42,6 +42,8 @@ async function run() {
   await controller.applyProject(web, undefined);
   await controller.applyProfile('http');
   await controller.saveCompanions([{ project: api.fsPath, profile: 'http' }]);
+  // Por separado: el panel muestra el campo de modo y los botones Ejecutar API / Detener API.
+  await controller.context.workspaceState.update(`companionMode:${web.toString()}`, 'separate');
   controller.selectedFramework = 'net8.0';
   await showPanel(controller);
   await scene('panel-dotnet');
@@ -51,10 +53,10 @@ async function run() {
   // 2) Depurando: la API corre sin depurador y la barra de acciones muestra Pausar y Detener.
   if (vscode.extensions.getExtension('ms-dotnettools.csharp')) {
     await vscode.commands.executeCommand('dotpilot.debug');
-    await waitFor(async () => controller.session && await portOpen(5291) && await portOpen(5290), { timeout: 150000, message: 'que la API y el sitio estén en marcha' });
+    await waitFor(async () => controller.session && await portOpen(5290), { timeout: 150000, message: 'que el sitio esté en marcha' });
   } else {
     await vscode.commands.executeCommand('dotpilot.run');
-    await waitFor(async () => await portOpen(5291) && await portOpen(5290), { timeout: 150000, message: 'que la API y el sitio estén en marcha' });
+    await waitFor(async () => await portOpen(5290), { timeout: 150000, message: 'que el sitio esté en marcha' });
   }
   await scene('toolbar-running');
   await vscode.commands.executeCommand('dotpilot.stop');

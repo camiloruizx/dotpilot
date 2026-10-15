@@ -269,5 +269,17 @@
   "Copiar enlace": "Copy link",
   "Enlace copiado.": "Link copied.",
   "Recargar ventana": "Reload window",
-  "Extensión instalada. Recarga la ventana para usarla.": "Extension installed. Reload the window to use it."
+  "Extensión instalada. Recarga la ventana para usarla.": "Extension installed. Reload the window to use it.",
+  "Ejecutar API": "Run API",
+  "Detener API": "Stop API",
+  "Ejecución de las APIs": "How the APIs run",
+  "Juntas con el proyecto": "Together with the project",
+  "Por separado": "Separately",
+  "Ejecutar inicia ambos y Detener cierra ambos.": "Run starts both and Stop closes both.",
+  "Ejecutar y Detener solo afectan al proyecto; la API tiene sus propios botones.": "Run and Stop only affect the project; the API has its own buttons.",
+  "Elige cómo se ejecutan las APIs complementarias": "Choose how the companion APIs run",
+  "No hay APIs complementarias configuradas.": "No companion APIs are configured.",
+  "Las APIs se inician junto con el proyecto. Elige «Por separado» para ejecutarlas aparte.": "The APIs start together with the project. Choose \"Separately\" to run them apart.",
+  "La API ya está en ejecución.": "The API is already running.",
+  "{0} · en ejecución": "{0} · running"
 }
