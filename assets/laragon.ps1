@@ -102,15 +102,17 @@ if ($env:DOTPILOT_MYSQL_PORT) {
   }
 }
 
-# Marcador de «listo»: DotPilot lo lee como la dirección en la que quedó escuchando.
-Write-Output "http://127.0.0.1:$port/"
-
+# Los lectores se abren antes de anunciar «listo»: lo que se escriba después del anuncio no se pierde.
 # Registro de errores y salida de consola de Apache en vivo.
 $readers = @()
 foreach ($path in @($log, $(if ($script:owned) { $console }))) {
   $reader = Open-Tail $path
   if ($reader) { $readers += $reader }
 }
+
+# Marcador de «listo»: DotPilot lo lee como la dirección en la que quedó escuchando.
+Write-Output "http://127.0.0.1:$port/"
+
 try {
 while ($true) {
   foreach ($reader in $readers) {
