@@ -1,5 +1,10 @@
 # DotPilot — Changes / Cambios
 
+## 1.0.1
+
+- Run API / Stop API now appear in the editor toolbar. VS Code only shows 9 slots there and moves the last ones to the "…" menu, so with Claude, Codex, Markdown preview and Git icons the API button was hidden; DotPilot's icons now come first (menu, Run/Pause/Stop, then Run API / Stop API). / Ejecutar API y Detener API ahora aparecen en la barra del editor. VS Code solo muestra 9 lugares ahí y manda los últimos al menú «…», así que con los iconos de Claude, Codex, vista previa de Markdown y Git el botón de la API quedaba oculto; los iconos de DotPilot ahora van primero (menú, Ejecutar/Pausar/Detener y luego Ejecutar API / Detener API).
+- In the floating debug bar, Run API / Stop API now come after VS Code's own Stop (application first, API second) instead of between Step Over and Step Into. / En la barra flotante de depuración, Ejecutar API / Detener API van ahora después del Detener de VS Code (primero la aplicación, luego la API) en vez de entre Step Over y Step Into.
+
 ## 1.0.0
 
 First Marketplace release (versions before 0.9.0 were local builds). It adds companion APIs and packaging on top of 0.9.0. / Primera versión en el Marketplace (las anteriores a 0.9.0 fueron compilaciones locales). Agrega APIs complementarias y empaquetado sobre 0.9.0.

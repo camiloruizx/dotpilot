@@ -25,11 +25,13 @@ test('all manifest localization tokens resolve in both languages',()=>{
   assert.deepEqual(toolbar.map(item=>item.command||item.submenu),[
     'dotpilot.run','dotpilot.pause','dotpilot.continue','dotpilot.stop','dotpilot.runApi','dotpilot.stopApi','dotpilot.main'
   ]);
-  // Orden visual: menú DotPilot (17), Ejecutar sin depurar (18), Pausar/Continuar (19), Detener (20).
-  assert.deepEqual(toolbar.slice(0,4).map(item=>item.group),['navigation@18','navigation@19','navigation@19','navigation@20']);
-  assert.deepEqual(toolbar.slice(4,6).map(item=>item.group),['navigation@21','navigation@21']);
+  // Orden visual: menú DotPilot, Ejecutar sin depurar, Pausar/Continuar, Detener y al final el par de la API.
+  // Van antes que los iconos de otras extensiones (orden 0 o mayor): VS Code deja 9 sitios en la barra del editor
+  // y manda al menú «…» los últimos, así que con orden alto el botón de la API quedaba oculto.
+  assert.deepEqual(toolbar.slice(0,4).map(item=>item.group),['navigation@-4','navigation@-3','navigation@-3','navigation@-2']);
+  assert.deepEqual(toolbar.slice(4,6).map(item=>item.group),['navigation@-1','navigation@-1']);
   assert.equal(toolbar[6].submenu,'dotpilot.main');
-  assert.equal(toolbar[6].group,'navigation@17');
+  assert.equal(toolbar[6].group,'navigation@-5');
   assert.deepEqual(toolbar.slice(0,4).map(item=>item.when),[
     'dotpilot.hasProjects && config.dotpilot.showEditorToolbar && !dotpilot.busy && !dotpilot.active',
     'dotpilot.hasProjects && config.dotpilot.showEditorToolbar && dotpilot.debugging && !dotpilot.paused',
@@ -44,6 +46,8 @@ test('all manifest localization tokens resolve in both languages',()=>{
   assert.deepEqual(toolbar.slice(0,6).map(item=>commands.get(item.command).icon),['$(play)','$(debug-pause)','$(debug-continue)','$(debug-stop)','$(play-circle)','$(stop-circle)']);
   // La barra flotante de depuración también lleva el segundo par Ejecutar/Detener (API).
   assert.deepEqual(p.contributes.menus['debug/toolBar'].map(item=>item.command),['dotpilot.runApi','dotpilot.stopApi']);
+  // Detrás del Detener de VS Code (orden 70) y antes de «Enfocar sesión» (100): primero el par de la aplicación y luego el de la API.
+  assert.deepEqual(p.contributes.menus['debug/toolBar'].map(item=>item.group),['navigation@90','navigation@90']);
 });
 test('menus and commands have one set of translations: no per-language copies, every title is a package.nls token',()=>{
   const p=require('../package.json'),nls={en:require('../package.nls.json'),es:require('../package.nls.es.json')};

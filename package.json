@@ -2,7 +2,7 @@
   "name": "dotpilot",
   "displayName": "DotPilot",
   "description": "%extension.description%",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "publisher": "camiloruizx",
   "engines": {
     "vscode": "^1.85.0"
@@ -319,49 +319,49 @@
         {
           "command": "dotpilot.run",
           "when": "dotpilot.hasProjects && config.dotpilot.showEditorToolbar && !dotpilot.busy && !dotpilot.active",
-          "group": "navigation@18"
+          "group": "navigation@-4"
         },
         {
           "command": "dotpilot.pause",
           "when": "dotpilot.hasProjects && config.dotpilot.showEditorToolbar && dotpilot.debugging && !dotpilot.paused",
-          "group": "navigation@19"
+          "group": "navigation@-3"
         },
         {
           "command": "dotpilot.continue",
           "when": "dotpilot.hasProjects && config.dotpilot.showEditorToolbar && dotpilot.debugging && dotpilot.paused",
-          "group": "navigation@19"
+          "group": "navigation@-3"
         },
         {
           "command": "dotpilot.stop",
           "when": "dotpilot.hasProjects && config.dotpilot.showEditorToolbar && dotpilot.canStop",
-          "group": "navigation@20"
+          "group": "navigation@-2"
         },
         {
           "command": "dotpilot.runApi",
           "when": "dotpilot.hasProjects && config.dotpilot.showEditorToolbar && dotpilot.apiSeparate && !dotpilot.apiRunning",
-          "group": "navigation@21"
+          "group": "navigation@-1"
         },
         {
           "command": "dotpilot.stopApi",
           "when": "dotpilot.hasProjects && config.dotpilot.showEditorToolbar && dotpilot.apiRunning",
-          "group": "navigation@21"
+          "group": "navigation@-1"
         },
         {
           "submenu": "dotpilot.main",
           "when": "dotpilot.hasProjects && config.dotpilot.showEditorToolbar",
-          "group": "navigation@17"
+          "group": "navigation@-5"
         }
       ],
       "debug/toolBar": [
         {
           "command": "dotpilot.runApi",
           "when": "dotpilot.apiSeparate && !dotpilot.apiRunning",
-          "group": "navigation@21"
+          "group": "navigation@90"
         },
         {
           "command": "dotpilot.stopApi",
           "when": "dotpilot.apiRunning",
-          "group": "navigation@21"
+          "group": "navigation@90"
         }
       ],
       "dotpilot.main": [
