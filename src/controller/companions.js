@@ -268,6 +268,14 @@ module.exports = ({ vscode, path, fs, os, portIsOpen, profilesFrom, localEndpoin
       if (!this.active()) await this.invoke('run');
     },
 
+    // Abre (o vuelve a abrir) la página de la API en marcha, su Swagger si lo usa. Útil si la ventana no se abrió sola
+    // (ajuste «Abrir navegador automáticamente») o si se cerró con el navegador «Predeterminado del sistema».
+    async openApi() {
+      const state = this.companions.find(item => item.proc && !item.proc.exited && item.browseUrl);
+      if (!state) throw new Error(this.t(this.apiStarting ? 'La API aún se está iniciando.' : 'La API no está en ejecución.'));
+      await this.openApiBrowser(state.browseUrl, state.entry, () => false);
+    },
+
     // Detiene la API y el proyecto; lo que no esté corriendo se deja como está.
     async stopAll() {
       if (this.apiRunning()) await this.stopApi();
@@ -322,14 +330,14 @@ module.exports = ({ vscode, path, fs, os, portIsOpen, profilesFrom, localEndpoin
         throw new Error(this.t('La API {0} no respondió en {1} s. Revisa su terminal.', name, READY_TIMEOUT / 1000));
       }
       this.result = ''; this.render();
-      if (this.config().get('openBrowser', true)) {
-        const view = await this.companionBrowse(entry, profile);
-        const url = view.open && browserUrl({ url: profile?.url || '', launchUrl: view.path }, state.url);
-        if (url && !cancelled()) {
-          // Por separado, la ventana de la API es suya: cerrarla detiene la API. Juntas con el proyecto es una pestaña independiente.
-          const opened = independent ? this.openApiBrowser(url, entry, cancelled) : this.openCompanionBrowser(url);
-          await opened.catch(error => this.output.appendLine(error.message));
-        }
+      // La página de la API (su Swagger si lo usa) se recuerda para el botón «Abrir API», aunque no se abra sola.
+      const view = await this.companionBrowse(entry, profile);
+      const pageUrl = browserUrl({ url: profile?.url || '', launchUrl: view.path }, state.url);
+      state.entry = entry; state.browseUrl = pageUrl || state.url;
+      if (this.config().get('openBrowser', true) && view.open && pageUrl && !cancelled()) {
+        // Por separado, la ventana de la API es suya: cerrarla detiene la API. Juntas con el proyecto es una pestaña independiente.
+        const opened = independent ? this.openApiBrowser(pageUrl, entry, cancelled) : this.openCompanionBrowser(pageUrl);
+        await opened.catch(error => this.output.appendLine(error.message));
       }
     },
 

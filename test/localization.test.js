@@ -101,7 +101,8 @@ test('the panel and the DotPilot menu offer Run all and Stop all, with the same 
   const p=require('../package.json'),commands=new Map(p.contributes.commands.map(c=>[c.command,c]));
   assert.equal(commands.get('dotpilot.runAll').icon,'$(play)');assert.equal(commands.get('dotpilot.stopAll').icon,'$(debug-stop)');
   const menu=p.contributes.menus['dotpilot.main'].map(item=>item.command);
-  assert.ok(menu.includes('dotpilot.runAll')&&menu.includes('dotpilot.stopAll'));
+  assert.ok(menu.includes('dotpilot.runAll')&&menu.includes('dotpilot.stopAll')&&menu.includes('dotpilot.openApi'));
+  assert.match(html,/data-action="openApi"[\s\S]*Open API/);
 });
 test('settings protocol accepts only declared keys and exact enum or boolean values',()=>{
   for(const field of sections.flatMap(s=>s.fields))assert.ok(validSetting(field.key,field.default));

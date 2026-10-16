@@ -76,7 +76,7 @@ module.exports = ({ vscode, path, DOTNET_ONLY, LABELS, BROWSERS, ACTIONS, browse
     const apiRunning = this.apiRunning();
     if (!this.busy && !active && companionCount) enabled.push('selectCompanionMode');
     if (apiSeparate && !apiRunning) enabled.push('runApi');
-    if (apiSeparate && apiRunning) enabled.push('stopApi');
+    if (apiSeparate && apiRunning) enabled.push('stopApi', 'openApi');
     if (apiSeparate && !this.busy && !active) enabled.push('runAll');
     if (apiSeparate && (apiRunning || active || this.busy || this.tasks.size)) enabled.push('stopAll');
     const packaging = this.app?.packaging?.kind || '';

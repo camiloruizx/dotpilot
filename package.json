@@ -238,6 +238,12 @@
         "enablement": "dotpilot.apiRunning"
       },
       {
+        "command": "dotpilot.openApi",
+        "title": "%dotpilot.openApi%",
+        "category": "DotPilot",
+        "enablement": "dotpilot.apiSeparate && dotpilot.apiRunning"
+      },
+      {
         "command": "dotpilot.runAll",
         "title": "%dotpilot.runAll%",
         "category": "DotPilot",
@@ -421,6 +427,11 @@
           "command": "dotpilot.stopApi",
           "group": "2_run@8",
           "when": "dotpilot.apiRunning"
+        },
+        {
+          "command": "dotpilot.openApi",
+          "group": "2_run@11",
+          "when": "dotpilot.apiSeparate && dotpilot.apiRunning"
         },
         {
           "command": "dotpilot.runAll",

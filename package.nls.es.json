@@ -90,5 +90,6 @@
   "dotpilot.stopApi": "Detener API complementaria",
   "dotpilot.runAll": "Ejecutar aplicación y API",
   "dotpilot.stopAll": "Detener aplicación y API",
+  "dotpilot.openApi": "Abrir la API en el navegador",
   "dotpilot.selectCompanionMode": "Elegir cómo se ejecutan las APIs complementarias"
 }

@@ -342,3 +342,28 @@ test('Stop all stops the API and the project, and leaves alone whatever is not r
   await h.self.stopAll();
   assert.deepEqual(calls, ['stop'], 'only the project was running');
 });
+
+test('Open API remembers the API page even when it does not open by itself, and opens it on demand', async t => {
+  const h = setup(); t.after(h.cleanup);
+  const project = path.join(h.api, 'Api.csproj');
+  fs.writeFileSync(project, '<Project Sdk="Microsoft.NET.Sdk.Web"><ItemGroup><PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" /></ItemGroup></Project>');
+  await h.self.saveCompanions([{ project, profile: 'http' }]);
+  h.state.set('companionMode:file:///web', 'separate');
+  h.self.config = () => ({ get: (key, fallback) => key === 'openBrowser' ? false : fallback });
+  const opened = [];
+  h.self.openApiBrowser = async (url, entry) => { opened.push([url, entry.project]); };
+  await assert.rejects(() => h.self.openApi(), /no está en ejecución/);
+  h.self.executeTask = async () => {
+    const companion = h.terminals.at(-1).companion;
+    companion.proc = { exited: false, stop: async () => {} };
+    setTimeout(() => { companion.url = 'http://localhost:5100'; }, 10);
+  };
+  await h.self.runApi();
+  assert.deepEqual(opened, [], 'with the automatic browser off nothing opens by itself');
+  assert.equal(h.self.companions[0].browseUrl, 'http://localhost:5100/swagger');
+  await h.self.openApi();
+  assert.deepEqual(opened, [['http://localhost:5100/swagger', project]]);
+  // Mientras la API aún arranca no hay página que abrir.
+  h.self.companions = [{ proc: { exited: false } }]; h.self.apiStarting = true;
+  await assert.rejects(() => h.self.openApi(), /aún se está iniciando/);
+});

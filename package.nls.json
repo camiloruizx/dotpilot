@@ -90,5 +90,6 @@
   "dotpilot.stopApi": "Stop companion API",
   "dotpilot.runAll": "Run application and API",
   "dotpilot.stopAll": "Stop application and API",
+  "dotpilot.openApi": "Open the API in the browser",
   "dotpilot.selectCompanionMode": "Select how companion APIs run"
 }
