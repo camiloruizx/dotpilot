@@ -227,14 +227,14 @@
         "command": "dotpilot.runApi",
         "title": "%dotpilot.runApi%",
         "category": "DotPilot",
-        "icon": "$(play-circle)",
+        "icon": "$(play)",
         "enablement": "dotpilot.apiSeparate && !dotpilot.apiRunning"
       },
       {
         "command": "dotpilot.stopApi",
         "title": "%dotpilot.stopApi%",
         "category": "DotPilot",
-        "icon": "$(stop-circle)",
+        "icon": "$(debug-stop)",
         "enablement": "dotpilot.apiRunning"
       },
       {

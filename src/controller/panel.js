@@ -120,7 +120,7 @@ module.exports = ({ vscode, path, DOTNET_ONLY, LABELS, BROWSERS, ACTIONS, browse
   },
 
   createStatusItems() {
-    const buttons = [['selectProject', '$(project)', 'Proyecto de inicio'], ['run', '$(play)', 'Ejecutar sin depurar'], ['runApi', '$(play-circle)', 'Ejecutar API'], ['stopApi', '$(stop-circle)', 'Detener API'], ['selectProfile', '', 'Perfil de ejecución'], ['selectConfiguration', '', 'Configuración de compilación'], ['debug', '$(debug-alt)', 'Iniciar depuración'], ['pause', '$(debug-pause)', 'Pausar / Continuar'], ['stop', '$(debug-stop)', 'Detener'], ['restart', '$(debug-restart)', 'Reiniciar'], ['buildMenu', '', 'Compilar / Recompilar / Limpiar / Analizar']];
+    const buttons = [['selectProject', '$(project)', 'Proyecto de inicio'], ['run', '$(play)', 'Ejecutar sin depurar'], ['runApi', '$(play) API', 'Ejecutar API'], ['stopApi', '$(debug-stop) API', 'Detener API'], ['selectProfile', '', 'Perfil de ejecución'], ['selectConfiguration', '', 'Configuración de compilación'], ['debug', '$(debug-alt)', 'Iniciar depuración'], ['pause', '$(debug-pause)', 'Pausar / Continuar'], ['stop', '$(debug-stop)', 'Detener'], ['restart', '$(debug-restart)', 'Reiniciar'], ['buildMenu', '', 'Compilar / Recompilar / Limpiar / Analizar']];
     buttons.forEach(([action, text, label], index) => {
       const item = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 200 - index);
       item.action = action; item.text = text; item.label = label; item.name = 'DotPilot: ' + this.t(label);

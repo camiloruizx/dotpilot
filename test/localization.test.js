@@ -43,7 +43,7 @@ test('all manifest localization tokens resolve in both languages',()=>{
     'dotpilot.hasProjects && config.dotpilot.showEditorToolbar && dotpilot.apiRunning'
   ]);
   const commands=new Map(p.contributes.commands.map(command=>[command.command,command]));
-  assert.deepEqual(toolbar.slice(0,6).map(item=>commands.get(item.command).icon),['$(play)','$(debug-pause)','$(debug-continue)','$(debug-stop)','$(play-circle)','$(stop-circle)']);
+  assert.deepEqual(toolbar.slice(0,6).map(item=>commands.get(item.command).icon),['$(play)','$(debug-pause)','$(debug-continue)','$(debug-stop)','$(play)','$(debug-stop)']);
   // La barra flotante de depuración también lleva el segundo par Ejecutar/Detener (API).
   assert.deepEqual(p.contributes.menus['debug/toolBar'].map(item=>item.command),['dotpilot.runApi','dotpilot.stopApi']);
   // Detrás del Detener de VS Code (orden 70) y antes de «Enfocar sesión» (100): primero el par de la aplicación y luego el de la API.
