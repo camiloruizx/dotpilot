@@ -24,7 +24,8 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npm test
+      # Un archivo de pruebas a la vez: los runners tienen pocos núcleos y las pruebas de procesos dependen de tiempos.
+      - run: npm run test:ci
       - name: Package (checks the manifest, README links and ignored files)
         run: npx vsce package --out dotpilot.vsix
       - uses: actions/upload-artifact@v4

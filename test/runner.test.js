@@ -5,6 +5,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { AppProcess, findLocalUrl, stripAnsi, quoteArgument, commandLine } = require('../src/runner');
+const { removeDir } = require('./support');
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 async function until(check, timeout = 10000) {
@@ -16,7 +17,7 @@ function script(source) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'dotpilot-runner-'));
   const file = path.join(dir, 'app.js');
   fs.writeFileSync(file, source);
-  return { dir, file, cleanup: () => fs.rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 }) };
+  return { dir, file, cleanup: () => removeDir(dir) };
 }
 const alive = pid => { try { process.kill(pid, 0); return true; } catch { return false; } };
 
@@ -132,7 +133,7 @@ test('only .cmd shims go through the shell; real executables get their arguments
     proc.start();
     await until(() => proc.exited);
     assert.match(output.join(''), /hello from a & b.js/);
-  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+  } finally { removeDir(dir); }
 });
 
 test('an argument that cannot be quoted safely for cmd.exe is refused before anything starts', () => {

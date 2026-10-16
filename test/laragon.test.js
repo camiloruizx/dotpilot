@@ -7,6 +7,7 @@ const path = require('node:path');
 const { spawn } = require('node:child_process');
 const net = require('node:net');
 const { findInstall, readVirtualHosts, siteUrl, profileFor, addApacheProfiles } = require('../src/laragon');
+const { removeDir } = require('./support');
 const { AppProcess } = require('../src/runner');
 
 // Sistema de archivos falso con rutas de Windows (las claves usan / por comodidad).
@@ -129,7 +130,8 @@ test('PHP projects get the Apache profile first; other kinds and other platforms
 const onWindows = process.platform === 'win32';
 const script = path.join(__dirname, '..', 'assets', 'laragon.ps1');
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
-async function until(check, timeout = 20000) {
+// El primer PowerShell de un runner de CI puede tardar bastante en arrancar: el margen solo cuenta cuando falla.
+async function until(check, timeout = 60000) {
   const end = Date.now() + timeout;
   while (Date.now() < end) { if (await check()) return; await sleep(50); }
   throw new Error('timeout');
@@ -179,7 +181,7 @@ test('the script starts Apache, shows the live error log, and Stop ends Apache a
     assert.doesNotMatch(run.text(), /old line/);
     await run.proc.stop();
     await until(async () => !(await portOpen(port)), 10000);
-  } finally { await run.proc.stop(); fs.rmSync(run.dir, { recursive: true, force: true }); fs.rmSync(log, { force: true }); }
+  } finally { await run.proc.stop(); removeDir(run.dir); fs.rmSync(log, { force: true }); }
 });
 
 test('an Apache that is already running is reused and survives Stop', { skip: !onWindows }, async () => {
@@ -195,7 +197,7 @@ test('an Apache that is already running is reused and survives Stop', { skip: !o
     await until(() => /http:\/\/127\.0\.0\.1:\d+\//.test(run.text()));
     await run.proc.stop();
     assert.equal(await portOpen(port), true, 'the existing Apache must not be closed');
-  } finally { existing.kill(); await run.proc.stop(); fs.rmSync(run.dir, { recursive: true, force: true }); fs.rmSync(log, { force: true }); }
+  } finally { existing.kill(); await run.proc.stop(); removeDir(run.dir); fs.rmSync(log, { force: true }); }
 });
 
 test('an Apache that dies on start is reported with the last lines of its log', { skip: !onWindows }, async () => {
@@ -211,7 +213,7 @@ test('an Apache that dies on start is reported with the last lines of its log', 
     assert.equal(exits[0], 1);
     assert.match(run.text(), /exited with code 3 before opening port/);
     assert.match(run.text(), /AH00526: Syntax error on line 12/);
-  } finally { await run.proc.stop(); fs.rmSync(run.dir, { recursive: true, force: true }); fs.rmSync(log, { force: true }); }
+  } finally { await run.proc.stop(); removeDir(run.dir); fs.rmSync(log, { force: true }); }
 });
 
 test('the script warns when MySQL does not answer and lets non-ASCII text through', { skip: !onWindows }, async () => {
@@ -224,7 +226,7 @@ test('the script warns when MySQL does not answer and lets non-ASCII text throug
     run.proc.start();
     await until(() => /Aviso: MySQL no responde en el puerto/.test(run.text()));
     assert.match(run.text(), /Apache iniciado/);
-  } finally { await run.proc.stop(); fs.rmSync(run.dir, { recursive: true, force: true }); fs.rmSync(log, { force: true }); }
+  } finally { await run.proc.stop(); removeDir(run.dir); fs.rmSync(log, { force: true }); }
 });
 
 test('an Apache that never opens its port is closed by the script, not left orphaned', { skip: !onWindows }, async () => {
@@ -244,5 +246,5 @@ test('an Apache that never opens its port is closed by the script, not left orph
     assert.ok(run.text().includes('did not open port'), run.text());
     const pid = Number(fs.readFileSync(pidFile, 'utf8'));
     await until(() => !alive(pid), 10000);
-  } finally { await run.proc.stop(); fs.rmSync(run.dir, { recursive: true, force: true }); fs.rmSync(log, { force: true }); fs.rmSync(pidFile, { force: true }); }
+  } finally { await run.proc.stop(); removeDir(run.dir); fs.rmSync(log, { force: true }); fs.rmSync(pidFile, { force: true }); }
 });
