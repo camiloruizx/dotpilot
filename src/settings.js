@@ -11,7 +11,8 @@ const sections = [
   ] },
   { title: 'Ejecución', fields: [
     { key: 'openBrowser', label: 'Abrir navegador automáticamente', description: 'Cuando el perfil lo permite y la aplicación está lista.', default: true },
-    { key: 'browser', label: 'Navegador web', description: 'Edge y Chrome detienen la app al cerrar su pestaña. El navegador del sistema requiere detenerla manualmente.', default: 'edge', options: [['edge','Microsoft Edge'],['chrome','Google Chrome'],['external','Predeterminado del sistema']] }
+    { key: 'browser', label: 'Navegador web', description: 'Edge y Chrome detienen la app al cerrar su pestaña. El navegador del sistema requiere detenerla manualmente.', default: 'edge', options: [['edge','Microsoft Edge'],['chrome','Google Chrome'],['external','Predeterminado del sistema']] },
+    { key: 'browserProfile', label: 'Perfil del navegador', description: 'Temporal empieza limpio cada vez y borra su perfil al cerrar. Persistente conserva sesiones, contraseñas y extensiones entre ejecuciones (inicia sesión una vez en esa ventana). En ambos, cerrar la ventana detiene la app.', default: 'temporary', options: [['temporary','Temporal'],['persistent','Persistente']] }
   ] },
   // Solo del usuario ('machine'): un repositorio no puede activarlo ni saltarse el permiso.
   { title: 'Asistentes de IA', fields: [

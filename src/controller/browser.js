@@ -9,6 +9,11 @@ module.exports = ({ vscode, path, fs, os, randomBytes, portIsOpen, BROWSERS, bro
     return Object.hasOwn(BROWSERS, value) ? value : 'edge';
   },
 
+  // Perfil de la ventana de la aplicación: temporal (predeterminado, como antes) o persistente.
+  browserProfile() {
+    return this.config().get('browserProfile', 'temporary') === 'persistent' ? 'persistent' : 'temporary';
+  },
+
   async chooseBrowser(value) {
     if (value !== 'default' && !Object.hasOwn(BROWSERS, value)) throw new Error(this.t('Opción o valor no válido.'));
     const before = this.browser();
@@ -98,12 +103,20 @@ module.exports = ({ vscode, path, fs, os, randomBytes, portIsOpen, BROWSERS, bro
 
   async launchBrowser(run, uri, browser) {
     try {
-      run.directory = await fs.mkdtemp(path.join(os.tmpdir(), 'dotpilot-browser-'));
+      // Persistente: un perfil de DotPilot por navegador que se conserva (sesiones, contraseñas, extensiones). Chrome y Edge
+      // recientes no permiten depurar su perfil personal, así que no se puede usar el de siempre. Temporal: uno nuevo cada vez.
+      const storage = this.context.globalStorageUri?.fsPath;
+      if (storage && this.browserProfile() === 'persistent') {
+        run.persistent = true;
+        run.directory = path.join(storage, 'browser-profile', browser);
+        await fs.mkdir(run.directory, { recursive: true });
+      } else run.directory = await fs.mkdtemp(path.join(os.tmpdir(), 'dotpilot-browser-'));
       if (run.closing || run.generation !== this.generation) return;
       const started = await vscode.debug.startDebugging(this.folder(), {
         name: 'DotPilot: ' + this.t('Navegador'), type: browser === 'chrome' ? 'pwa-chrome' : 'pwa-msedge',
         request: 'launch', url: uri.toString(), webRoot: path.dirname(this.project.fsPath),
         userDataDir: run.directory, cleanUp: 'wholeBrowser', timeout: 15000,
+        runtimeArgs: run.persistent ? ['--hide-crash-restore-bubble'] : [],
         __dotpilotBrowser: run.token
       }, { noDebug: true, suppressDebugToolbar: true, suppressDebugStatusbar: true, suppressDebugView: true });
       if (!started) throw new Error(this.t('No se pudo abrir el navegador vinculado. Revisa que Edge o Chrome esté instalado, o elige «external» en DotPilot: Browser.'));
@@ -147,7 +160,7 @@ module.exports = ({ vscode, path, fs, os, randomBytes, portIsOpen, BROWSERS, bro
   },
 
   async removeBrowserDirectory(run) {
-    if (!run.directory) return;
+    if (!run.directory || run.persistent) return;
     await fs.rm(run.directory, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 })
       .catch(error => this.output.appendLine(this.t('No se pudo limpiar el perfil temporal del navegador: {0}', error.message)));
   },

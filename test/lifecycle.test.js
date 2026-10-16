@@ -6,12 +6,12 @@ const path = require('node:path');
 const vm = require('node:vm');
 const { createRequire } = require('node:module');
 
-function harness() {
-  const events = new Set(), starts = [], stops = [], removed = [], commands = [], imports = [], saved = new Map();
+function harness(settings = {}) {
+  const events = new Set(), starts = [], stops = [], removed = [], made = [], commands = [], imports = [], saved = new Map();
   const api = {
     window: { createOutputChannel: () => ({appendLine(){}}) },
     workspace: {
-      getConfiguration: () => ({get:(key,fallback) => key === 'browser' ? 'edge' : fallback}),
+      getConfiguration: () => ({get:(key,fallback) => key === 'browser' ? 'edge' : key in settings ? settings[key] : fallback}),
       getWorkspaceFolder: () => undefined
       ,asRelativePath: uri => uri.fsPath
     },
@@ -31,26 +31,48 @@ function harness() {
   const localRequire=createRequire(file);
   const sandbox={module:{exports:{}},require:name=>{imports.push(name);return name==='vscode'?api:name==='node:fs/promises'?{
     mkdtemp:async()=>path.join(require('node:os').tmpdir(),'dotpilot-browser-test'),
+    mkdir:async directory=>made.push(directory),
     rm:async directory=>removed.push(directory)
   }:localRequire(name);},setTimeout,clearTimeout,Buffer};
   vm.runInNewContext(fs.readFileSync(file,'utf8'),sandbox,{filename:file});
-  const c=new sandbox.module.exports.Controller({subscriptions:[],workspaceState:{get:(key,fallback)=>saved.has(key)?saved.get(key):fallback,update:async(key,value)=>{if(value===undefined)saved.delete(key);else saved.set(key,value);}}});
+  const c=new sandbox.module.exports.Controller({subscriptions:[],globalStorageUri:{fsPath:path.join(__dirname,'storage')},workspaceState:{get:(key,fallback)=>saved.has(key)?saved.get(key):fallback,update:async(key,value)=>{if(value===undefined)saved.delete(key);else saved.set(key,value);}}});
   const render=c.render.bind(c);
   c.render=()=>{};
   c.project={fsPath:path.join(__dirname,'App.csproj')};
   c.profiles=[{name:'http',url:'http://localhost:5000'}]; c.profile='http';
   c.runTask={};
   const actions=[]; c.invoke=async action=>actions.push(action);
-  return {c,api,starts,stops,removed,actions,commands,render,imports};
+  return {c,api,starts,stops,removed,made,actions,commands,render,imports};
 }
 
 test('concurrent browser requests share a single owned session and a temporary profile',async()=>{
-  const {c,starts,stops,removed}=harness();
+  const {c,starts,stops,removed}=harness({browserProfile:'temporary'});
   await Promise.all([c.openBrowser(),c.openBrowser()]);
   assert.equal(starts.length,1);
   assert.match(starts[0].configuration.userDataDir,/dotpilot-browser-/);
   await Promise.all([c.closeBrowser(),c.closeBrowser()]);
   assert.equal(stops.length,1); assert.equal(c.browserRun,undefined); assert.ok(removed.length);
+});
+
+test('the persistent profile keeps its folder between runs, so saved sessions and extensions survive',async()=>{
+  const {c,starts,stops,removed,made}=harness({browserProfile:'persistent'});
+  await c.openBrowser();
+  const profile=starts[0].configuration.userDataDir;
+  assert.equal(profile,path.join(__dirname,'storage','browser-profile','edge'));
+  assert.deepEqual(made,[profile]);
+  assert.deepEqual(starts[0].configuration.runtimeArgs,['--hide-crash-restore-bubble']);
+  await c.closeBrowser();
+  assert.equal(stops.length,1); assert.deepEqual(removed,[],'the persistent profile is never deleted');
+});
+
+test('the profile is temporary by default and deleted on close',async()=>{
+  const {c,starts,removed,made}=harness();
+  await c.openBrowser();
+  assert.match(starts[0].configuration.userDataDir,/dotpilot-browser-/);
+  assert.deepEqual(starts[0].configuration.runtimeArgs,[]);
+  assert.deepEqual(made,[]);
+  await c.closeBrowser();
+  assert.ok(removed.length);
 });
 
 test('closing the tracked page stops its backend even when the root remains open',async()=>{
@@ -87,7 +109,7 @@ test('Stop during browser startup closes the late session without stopping a new
 });
 
 test('failed browser launch allows retry and preserves backend execution',async()=>{
-  const {c,api,actions,removed}=harness(); api.debug.startDebugging=async()=>false;
+  const {c,api,actions,removed}=harness({browserProfile:'temporary'}); api.debug.startDebugging=async()=>false;
   await assert.rejects(()=>c.openBrowser(),/Could not open/);
   assert.equal(c.browserRun,undefined); assert.equal(c.browserOpened,false);
   assert.ok(c.active()); assert.equal(actions.length,0); assert.ok(removed.length);

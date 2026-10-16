@@ -289,6 +289,7 @@ Los controles siempre ejecutan el **proyecto de inicio seleccionado**, aunque ed
 | `dotpilot.browser` | Edge o Chrome vinculados a la ejecución, o navegador externo sin detención automática |
 | `dotpilot.showEditorToolbar` | Mostrar controles superiores (activado por defecto) |
 | `dotpilot.showStatusBar` | Mostrar controles inferiores (desactivado por defecto) |
+| `dotpilot.browserProfile` | Perfil de la ventana del navegador de la aplicación: `temporary` (predeterminado) ventana vinculada con un perfil limpio; `persistent` ventana vinculada cuyo perfil se conserva entre ejecuciones (inicias sesión una vez). Cerrar cualquiera detiene la app |
 | `dotpilot.openBrowser` | Permitir apertura automática pedida por el perfil |
 | `dotpilot.buildScope` | Destino inicial: solución o proyecto; la selección guardada del panel tiene prioridad |
 

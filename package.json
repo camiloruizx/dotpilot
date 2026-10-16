@@ -533,6 +533,20 @@
           "description": "%dotpilot.showStatusBar.description%",
           "scope": "resource"
         },
+        "dotpilot.browserProfile": {
+          "type": "string",
+          "enum": [
+            "temporary",
+            "persistent"
+          ],
+          "enumDescriptions": [
+            "%dotpilot.browserProfile.enum.0%",
+            "%dotpilot.browserProfile.enum.1%"
+          ],
+          "default": "temporary",
+          "scope": "resource",
+          "description": "%dotpilot.browserProfile.description%"
+        },
         "dotpilot.openBrowser": {
           "type": "boolean",
           "default": true,

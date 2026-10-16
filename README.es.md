@@ -102,6 +102,7 @@ Las herramientas se llaman `dotpilot_*`: listar proyectos, elegir proyecto o per
 | `dotpilot.dotnetPath` / `pythonPath` / `phpPath` / `laragonPath` | Ejecutables o carpeta de instalación, si no están en el PATH |
 | `dotpilot.buildScope` | Compilar la solución o solo el proyecto de inicio |
 | `dotpilot.showEditorToolbar` / `showStatusBar` | Mostrar el menú y botones en el editor / controles en la barra inferior |
+| `dotpilot.browserProfile` | `temporary` (predeterminado) ventana vinculada con un perfil limpio; `persistent` ventana vinculada cuyo perfil se conserva entre ejecuciones (inicias sesión una vez). Cerrar cualquiera detiene la app |
 | `dotpilot.assistantsEnabled` / `assistantsPermission` | Puente para asistentes de IA y su modo de permiso (solo ajustes de usuario) |
 
 Los menús y la paleta de comandos siguen el idioma de VS Code; el panel y los mensajes siguen `dotpilot.language`.

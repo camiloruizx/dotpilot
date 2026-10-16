@@ -102,6 +102,7 @@ Tools are named `dotpilot_*`: list projects, select a project or profile, run, d
 | `dotpilot.dotnetPath` / `pythonPath` / `phpPath` / `laragonPath` | Executables or install folder, when not on PATH |
 | `dotpilot.buildScope` | Build the solution or only the startup project |
 | `dotpilot.showEditorToolbar` / `showStatusBar` | Show the DotPilot menu and run buttons / status bar controls |
+| `dotpilot.browserProfile` | `temporary` (default) linked window with a clean profile; `persistent` linked window whose profile is kept between runs (sign in once). Closing either stops the app |
 | `dotpilot.assistantsEnabled` / `assistantsPermission` | AI assistants bridge and its permission mode (user settings only) |
 
 Menus and the command palette follow VS Code's display language; the panel and messages follow `dotpilot.language`.
