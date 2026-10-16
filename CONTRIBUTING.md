@@ -38,8 +38,9 @@ Press **F5** in this folder to open an Extension Development Host.
 
 1. Bump `version` in `package.json` and `package-lock.json` (and the fallback in `src/mcp-server.js` and the VSIX file names in
    `docs/GUIA.md`).
-2. Add a `## X.Y.Z` section to `CHANGELOG.md` and the English-only notes in `release-notes/X.Y.Z.md`; the notes become the GitHub
-   Release description.
+2. Add a `## X.Y.Z` section to `CHANGELOG.md` (one bullet per change, English and Spanish inline separated by " / "), then run
+   `npm run release-notes` to write `release-notes/X.Y.Z.md`: the same section without bold or code marks, which becomes the GitHub
+   Release description. Commit it; a test and the Release workflow fail if it no longer matches the changelog.
 3. Merge to `main`, wait for CI to pass, then tag it: `git tag vX.Y.Z && git push origin vX.Y.Z`.
 
 The **Release** workflow checks that the tag, the version, the changelog and the notes agree, runs the tests, packages the VSIX, creates
