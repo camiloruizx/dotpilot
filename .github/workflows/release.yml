@@ -1,0 +1,63 @@
+name: Release
+
+# Al subir una etiqueta vX.Y.Z: comprueba que etiqueta, versión, changelog y notas coinciden, prueba, empaqueta el VSIX,
+# crea el Release de GitHub con el VSIX y, si el repositorio tiene el secreto VSCE_PAT, lo publica en el Marketplace.
+# Cómo se usa: CONTRIBUTING.md > Releasing.
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Release ${{ github.ref_name }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+
+      - name: Check the tag, the version, the changelog and the release notes
+        shell: bash
+        run: |
+          version=$(node -p "require('./package.json').version")
+          [ "v$version" = "$GITHUB_REF_NAME" ] || { echo "::error::The tag $GITHUB_REF_NAME does not match package.json ($version)"; exit 1; }
+          [ -s "release-notes/$version.md" ] || { echo "::error::Missing release-notes/$version.md"; exit 1; }
+          grep -q "^## $version\$" CHANGELOG.md || { echo "::error::CHANGELOG.md has no section for $version"; exit 1; }
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+
+      - run: npm run test:ci
+
+      - name: Package
+        run: npx vsce package --out "dotpilot-${{ env.VERSION }}.vsix"
+
+      - name: GitHub Release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          file="dotpilot-$VERSION.vsix"
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            # El Release ya existe (por ejemplo, creado a mano): solo se adjunta el VSIX.
+            gh release upload "$GITHUB_REF_NAME" "$file" --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" "$file" --title "DotPilot $VERSION" --notes-file "release-notes/$VERSION.md" --verify-tag
+          fi
+
+      - name: Marketplace
+        shell: bash
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+        # Un fallo aquí (versión ya publicada, token vencido) no borra el Release ya creado: se avisa y se sube a mano.
+        continue-on-error: true
+        run: |
+          if [ -z "$VSCE_PAT" ]; then
+            echo "::warning::VSCE_PAT is not set: upload dotpilot-$VERSION.vsix to the Marketplace by hand."
+            exit 0
+          fi
+          npx vsce publish --packagePath "dotpilot-$VERSION.vsix" || { echo "::warning::The Marketplace publish failed (already published? expired token?)"; exit 1; }

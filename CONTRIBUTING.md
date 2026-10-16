@@ -33,3 +33,16 @@ Press **F5** in this folder to open an Extension Development Host.
 - Menus and commands use a single translation set; do not add per-language copies.
 - Do not add runtime dependencies without discussing it first.
 - Keep `VALIDACION.md` honest: say what was verified and what was not.
+
+## Releasing
+
+1. Bump `version` in `package.json` and `package-lock.json` (and the fallback in `src/mcp-server.js` and the VSIX file names in
+   `docs/GUIA.md`).
+2. Add a `## X.Y.Z` section to `CHANGELOG.md` and the English-only notes in `release-notes/X.Y.Z.md`; the notes become the GitHub
+   Release description.
+3. Merge to `main`, wait for CI to pass, then tag it: `git tag vX.Y.Z && git push origin vX.Y.Z`.
+
+The **Release** workflow checks that the tag, the version, the changelog and the notes agree, runs the tests, packages the VSIX, creates
+the GitHub Release with it and, if the repository has a `VSCE_PAT` secret (an Azure DevOps token with *Marketplace > Manage*),
+publishes it to the Marketplace. Without the secret it only warns, and the VSIX is uploaded by hand. If the Release already exists, the
+workflow only attaches the VSIX to it.

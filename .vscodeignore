@@ -14,5 +14,6 @@ VALIDACION.md
 .github/**
 SECURITY.md
 CONTRIBUTING.md
+release-notes/**
 .vscode-test/**
 .mcp.json
