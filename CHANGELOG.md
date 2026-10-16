@@ -1,5 +1,10 @@
 # DotPilot — Changes / Cambios
 
+## 1.0.2
+
+- Apache (Laragon): the log reader is now opened before DotPilot announces the server is ready, so a line written to Apache's error log right after the start is no longer skipped. / Apache (Laragon): el lector del registro se abre ahora antes de que DotPilot anuncie que el servidor está listo, así que una línea escrita en el registro de errores de Apache justo después de arrancar ya no se omite.
+- Internal: the process tests clean up their temporary folders with retries and the CI runs the unit tests one file at a time (`npm run test:ci`), so the Windows job no longer fails at random. / Interno: las pruebas de procesos borran sus carpetas temporales con reintentos y el CI ejecuta las pruebas unitarias un archivo a la vez (`npm run test:ci`), así que el job de Windows ya no falla al azar.
+
 ## 1.0.1
 
 - Run API / Stop API now appear in the editor toolbar. VS Code only shows 9 slots there and moves the last ones to the "…" menu, so with Claude, Codex, Markdown preview and Git icons the API button was hidden; DotPilot's icons now come first (menu, Run/Pause/Stop, then Run API / Stop API). / Ejecutar API y Detener API ahora aparecen en la barra del editor. VS Code solo muestra 9 lugares ahí y manda los últimos al menú «…», así que con los iconos de Claude, Codex, vista previa de Markdown y Git el botón de la API quedaba oculto; los iconos de DotPilot ahora van primero (menú, Ejecutar/Pausar/Detener y luego Ejecutar API / Detener API).
