@@ -297,3 +297,48 @@ test('Run API opens a window that belongs to the API; running it together with t
   assert.deepEqual(linked, [['http://localhost:5100/swagger', project]]);
   assert.deepEqual(h.opened, []);
 });
+
+test('Run all starts the API, waits until it is ready and then runs the project; a failing API stops there', async t => {
+  const h = setup(); t.after(h.cleanup);
+  const project = path.join(h.api, 'Api.csproj');
+  await h.self.saveCompanions([{ project, profile: 'http' }]);
+  const calls = [];
+  h.self.invoke = async action => { calls.push(action + ':' + (h.self.apiRunning() ? 'api-up' : 'api-down')); };
+  await assert.rejects(() => h.self.runAll(), /«Por separado»/, 'together mode has no use for Run all');
+  h.state.set('companionMode:file:///web', 'separate');
+  h.self.executeTask = async () => {
+    const companion = h.terminals.at(-1).companion;
+    companion.proc = { exited: false, stop: async () => {} };
+    setTimeout(() => { companion.url = 'http://localhost:5100'; }, 10);
+  };
+  await h.self.runAll();
+  assert.deepEqual(calls, ['run:api-up'], 'the project starts only after the API is up');
+  // Con la API ya corriendo solo se ejecuta el proyecto, y con el proyecto ya corriendo no se vuelve a lanzar.
+  calls.length = 0;
+  await h.self.runAll();
+  assert.deepEqual(calls, ['run:api-up']);
+  calls.length = 0; h.self.active = () => true;
+  await h.self.runAll();
+  assert.deepEqual(calls, []);
+  // Una API que sale antes de estar lista no deja ejecutar el proyecto.
+  h.self.active = () => false; h.self.companions = [];
+  h.self.executeTask = async () => { h.terminals.at(-1).companion.exitCode = 3; };
+  await assert.rejects(() => h.self.runAll(), /terminó con código 3/);
+  assert.deepEqual(calls, []);
+});
+
+test('Stop all stops the API and the project, and leaves alone whatever is not running', async t => {
+  const h = setup(); t.after(h.cleanup);
+  const calls = [];
+  h.self.tasks = new Set(); h.self.busy = false;
+  h.self.stopApi = async () => { calls.push('stopApi'); h.self.companions = []; };
+  h.self.stop = async () => { calls.push('stop'); };
+  await h.self.stopAll();
+  assert.deepEqual(calls, [], 'nothing runs: nothing to stop');
+  h.self.companions = [{ proc: { exited: false } }]; h.self.active = () => true;
+  await h.self.stopAll();
+  assert.deepEqual(calls, ['stopApi', 'stop']);
+  calls.length = 0; h.self.active = () => true;
+  await h.self.stopAll();
+  assert.deepEqual(calls, ['stop'], 'only the project was running');
+});

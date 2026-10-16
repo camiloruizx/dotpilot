@@ -95,6 +95,14 @@ test('translated panel and settings have no missing labels',()=>{
   for(const match of agent.matchAll(/\bc\.t\('([^']+)'/g))assert.ok(english[match[1]],match[1]);
   for(const tool of require('../src/agent-tools').TOOLS){assert.ok(english[tool.title],tool.title);assert.ok(english[tool.userDescription],tool.userDescription);}
 });
+test('the panel and the DotPilot menu offer Run all and Stop all, with the same play and stop icons',()=>{
+  const html=panelHtml({language:'en'});
+  assert.match(html,/data-action="runAll"[\s\S]*Run all/);assert.match(html,/data-action="stopAll"[\s\S]*Stop all/);
+  const p=require('../package.json'),commands=new Map(p.contributes.commands.map(c=>[c.command,c]));
+  assert.equal(commands.get('dotpilot.runAll').icon,'$(play)');assert.equal(commands.get('dotpilot.stopAll').icon,'$(debug-stop)');
+  const menu=p.contributes.menus['dotpilot.main'].map(item=>item.command);
+  assert.ok(menu.includes('dotpilot.runAll')&&menu.includes('dotpilot.stopAll'));
+});
 test('settings protocol accepts only declared keys and exact enum or boolean values',()=>{
   for(const field of sections.flatMap(s=>s.fields))assert.ok(validSetting(field.key,field.default));
   for(const [key,value] of [['dotnetPath','malicious'],['__proto__',true],['browser','firefox'],['showStatusBar','true'],['language',{}],['browser',null]])assert.equal(validSetting(key,value),false);

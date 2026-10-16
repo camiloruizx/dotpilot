@@ -88,5 +88,7 @@
   "dotpilot.packageApk": "Build Android APK (Expo)",
   "dotpilot.runApi": "Run companion API",
   "dotpilot.stopApi": "Stop companion API",
+  "dotpilot.runAll": "Run application and API",
+  "dotpilot.stopAll": "Stop application and API",
   "dotpilot.selectCompanionMode": "Select how companion APIs run"
 }

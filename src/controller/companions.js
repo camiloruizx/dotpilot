@@ -258,6 +258,22 @@ module.exports = ({ vscode, path, fs, os, portIsOpen, profilesFrom, localEndpoin
       this.render();
     },
 
+    // Con las APIs por separado: inicia la API (si no corre), espera a que esté lista y después ejecuta el proyecto.
+    // Si la API falla no se ejecuta el proyecto. Un proyecto que ya corre no se vuelve a lanzar.
+    async runAll() {
+      if (!(await this.ensureProject())) return;
+      this.assertDotnet();
+      if (!this.companionList().length || this.companionMode() !== 'separate') throw new Error(this.t('Ejecutar todo requiere las APIs complementarias en modo «Por separado».'));
+      if (!this.apiRunning()) await this.runApi();
+      if (!this.active()) await this.invoke('run');
+    },
+
+    // Detiene la API y el proyecto; lo que no esté corriendo se deja como está.
+    async stopAll() {
+      if (this.apiRunning()) await this.stopApi();
+      if (this.active() || this.busy || this.tasks?.size) await this.stop();
+    },
+
     // Inicia las APIs en orden y espera a que cada una esté escuchando. Lanza si alguna falla.
     // `cancelled` indica si la espera ya no vale; `independent`, que la API tiene su propio ciclo de vida.
     async startCompanions(cancelled, independent = false) {

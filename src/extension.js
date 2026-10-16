@@ -14,11 +14,11 @@ const EXCLUDE = '**/{bin,obj,node_modules,.git}/**';
 const EXCLUDE_APPS = '**/{bin,obj,node_modules,.git,vendor,.venv,venv,__pycache__,.next,.nuxt}/**';
 const NOISE = /[\\/](?:node_modules|\.git|vendor|\.venv|venv|__pycache__)[\\/]/;
 // Acciones que solo tienen sentido con un proyecto .NET seleccionado.
-const DOTNET_ONLY = new Set(['manageCompanions', 'selectCompanionMode', 'runApi', 'stopApi', 'debug', 'watch', 'selectConfiguration', 'selectFramework', 'selectTarget', 'diagnostics', 'buildMenu', 'build', 'rebuild', 'clean', 'restore', 'test', 'analyze']);
+const DOTNET_ONLY = new Set(['manageCompanions', 'selectCompanionMode', 'runApi', 'stopApi', 'runAll', 'stopAll', 'debug', 'watch', 'selectConfiguration', 'selectFramework', 'selectTarget', 'diagnostics', 'buildMenu', 'build', 'rebuild', 'clean', 'restore', 'test', 'analyze']);
 const LABELS = { build: 'Compilar', rebuild: 'Recompilar', clean: 'Limpiar', restore: 'Restaurar NuGet', test: 'Ejecutar pruebas', analyze: 'Analizar código' };
 const BROWSERS = { edge: 'Microsoft Edge', chrome: 'Google Chrome', external: 'Predeterminado del sistema' };
 const ACTIONS = ['run', 'debug', 'watch', 'showSettings', 'advancedSettings', 'continue', 'pause', 'stop', 'restart', ...Object.keys(LABELS), 'selectProject', 'selectProfile', 'selectConfiguration', 'selectFramework', 'selectTarget', 'refresh', 'buildMenu', 'openBrowser', 'editProfile', 'showOutput', 'showProblems', 'diagnostics', 'stepOver', 'stepInto', 'stepOut'];
-ACTIONS.push('selectBrowser', 'browserEdge', 'browserChrome', 'browserExternal', 'browserDefault', 'connectAssistants', 'manageCompanions', 'selectCompanionMode', 'runApi', 'stopApi', 'packageVsix', 'packageApk');
+ACTIONS.push('selectBrowser', 'browserEdge', 'browserChrome', 'browserExternal', 'browserDefault', 'connectAssistants', 'manageCompanions', 'selectCompanionMode', 'runApi', 'stopApi', 'runAll', 'stopAll', 'packageVsix', 'packageApk');
 class CancelledOperation extends Error { constructor() { super('Operation stopped.'); } }
 
 function portIsOpen(endpoint) {
@@ -277,6 +277,8 @@ class Controller {
       // Las APIs por separado tienen su propio ciclo: no esperan a que termine otra operación.
       if (action === 'runApi') return await this.runApi();
       if (action === 'stopApi') return await this.stopApi();
+      if (action === 'runAll') return await this.runAll();
+      if (action === 'stopAll') return await this.stopAll();
       if (action === 'pause' || action === 'continue') return await this.pause();
       if (['stepOver', 'stepInto', 'stepOut'].includes(action)) return await this.step(action);
       if (action === 'openBrowser') return await this.openBrowser();

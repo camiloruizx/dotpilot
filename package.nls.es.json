@@ -88,5 +88,7 @@
   "dotpilot.packageApk": "Generar APK de Android (Expo)",
   "dotpilot.runApi": "Ejecutar API complementaria",
   "dotpilot.stopApi": "Detener API complementaria",
+  "dotpilot.runAll": "Ejecutar aplicación y API",
+  "dotpilot.stopAll": "Detener aplicación y API",
   "dotpilot.selectCompanionMode": "Elegir cómo se ejecutan las APIs complementarias"
 }
