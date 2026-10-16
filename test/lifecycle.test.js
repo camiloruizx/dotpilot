@@ -170,3 +170,67 @@ test('a burst of refresh requests runs one scan plus at most one repeat',async()
   assert.equal(scans,2);assert.equal(c.refreshing,undefined);
   await c.refresh();assert.equal(scans,3);
 });
+
+const { EventEmitter } = require('node:events');
+const apiEntry = { project: path.join(__dirname, 'Api', 'Api.csproj') };
+// Ventana de la API simulada: sin pid, así que cerrarla no toca ningún proceso real.
+function fakeWindow() { const child = new EventEmitter(); child.exitCode = null; child.signalCode = null; return child; }
+function apiHarness() {
+  const h = harness(), windows = [];
+  h.c.launchOwnedBrowser = (browser, url, directory) => { const child = fakeWindow(); windows.push({ browser, url, directory, child }); return child; };
+  return { ...h, windows };
+}
+
+test('with the APIs apart, closing the API window stops only the API and creates no debug session',async()=>{
+  const {c,starts,windows,actions}=apiHarness();
+  await c.openApiBrowser('http://localhost:5100/swagger',apiEntry,()=>false);
+  assert.equal(windows.length,1);
+  assert.equal(windows[0].browser,'edge');
+  assert.equal(windows[0].url,'http://localhost:5100/swagger');
+  assert.match(windows[0].directory,/dotpilot-browser-/);
+  assert.equal(starts.length,0,'a debug session would show the floating debug toolbar');
+  assert.equal(c.browserRun,undefined,'the API window is not the project window');
+  windows[0].child.emit('exit',0);
+  assert.deepEqual(actions,['stopApi']);
+  assert.equal(c.apiBrowserRun,undefined);
+});
+
+test('Stop API closes its window without stopping the API a second time',async()=>{
+  const {c,windows,removed,actions}=apiHarness();
+  await c.openApiBrowser('http://localhost:5100/swagger',apiEntry,()=>false);
+  await Promise.all([c.closeApiBrowser(),c.closeApiBrowser()]);
+  assert.equal(c.apiBrowserRun,undefined);
+  windows[0].child.emit('exit',0);
+  await new Promise(resolve=>setImmediate(resolve));
+  assert.deepEqual(actions,[]);
+  assert.ok(removed.length,'the temporary profile is removed');
+});
+
+test('a new API window replaces the previous one without stopping the API',async()=>{
+  const {c,windows,actions}=apiHarness();
+  await c.openApiBrowser('http://localhost:5100/swagger',apiEntry,()=>false);
+  await c.openApiBrowser('http://localhost:5100/swagger',apiEntry,()=>false);
+  assert.equal(windows.length,2);
+  windows[0].child.emit('exit',0);
+  assert.deepEqual(actions,[]);
+  windows[1].child.emit('exit',0);
+  assert.deepEqual(actions,['stopApi']);
+});
+
+test('an API window that is cancelled, external, remote or cannot be launched falls back to an independent tab or nothing',async()=>{
+  const {c,windows,actions,api,removed}=apiHarness();
+  const tabs=[]; c.openCompanionBrowser=async url=>tabs.push(url);
+  await c.openApiBrowser('http://localhost:5100/swagger',apiEntry,()=>true);
+  assert.equal(windows.length,0); assert.deepEqual(tabs,[]);
+  c.browser=()=>'external';
+  await c.openApiBrowser('http://localhost:5100/swagger',apiEntry,()=>false);
+  assert.equal(windows.length,0); assert.deepEqual(tabs,['http://localhost:5100/swagger']);
+  c.browser=()=>'edge'; api.env.remoteName='ssh-remote';
+  await c.openApiBrowser('http://localhost:5100/swagger',apiEntry,()=>false);
+  assert.equal(windows.length,0); assert.equal(tabs.length,2);
+  delete api.env.remoteName;
+  c.launchOwnedBrowser=()=>undefined;
+  await c.openApiBrowser('http://localhost:5100/swagger',apiEntry,()=>false);
+  assert.equal(tabs.length,3); assert.ok(removed.length,'the unused profile is removed');
+  assert.equal(c.apiBrowserRun,undefined); assert.deepEqual(actions,[]);
+});

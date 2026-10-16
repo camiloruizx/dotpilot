@@ -39,4 +39,23 @@ function open(browser, url, { exists, platform, env, launch = spawn } = {}) {
   } catch { return false; }
 }
 
-module.exports = { candidates, find, open };
+// Abre una ventana nueva con un perfil propio (`directory`) y devuelve su proceso, o undefined si no se pudo. Con un
+// perfil recién creado el navegador es una instancia aparte: el proceso vive mientras la ventana siga abierta, así que
+// su salida indica que la cerraron. Sin sesión de depuración, VS Code no muestra su barra flotante.
+function openOwned(browser, url, directory, { exists, platform, env, launch = spawn } = {}) {
+  if (browser !== 'chrome' && browser !== 'edge') return undefined;
+  let parsed;
+  try { parsed = new URL(url); } catch { return undefined; }
+  if (!['http:', 'https:'].includes(parsed.protocol) || parsed.username || parsed.password) return undefined;
+  const executable = find(browser, { exists, platform, env });
+  if (!executable) return undefined;
+  try {
+    const child = launch(executable, [`--user-data-dir=${directory}`, '--no-first-run', '--no-default-browser-check', '--new-window', parsed.toString()],
+      { detached: true, stdio: 'ignore', windowsHide: true });
+    child.on?.('error', () => {});
+    child.unref?.();
+    return child;
+  } catch { return undefined; }
+}
+
+module.exports = { candidates, find, open, openOwned };

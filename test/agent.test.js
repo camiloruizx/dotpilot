@@ -327,6 +327,22 @@ test('closing the bridge while it is still starting leaves no port or discovery 
   rm(home);
 });
 
+test('an owned browser window gets its own profile and refuses unsafe URLs',()=>{
+  const { openOwned } = require('../src/browsers');
+  const calls=[]; const child={on(){},unref(){}};
+  const launch=(file,args,options)=>{calls.push([file,args,options]);return child;};
+  const exists=file=>file.endsWith('msedge.exe');
+  const env={PROGRAMFILES:'C:\Program Files','PROGRAMFILES(X86)':'C:\Program Files (x86)',LOCALAPPDATA:'C:\Users\a\AppData\Local'};
+  assert.equal(openOwned('edge','http://localhost:7171/swagger','C:\tmp\profile',{exists,platform:'win32',env,launch}),child);
+  assert.match(calls[0][0],/msedge.exe$/);
+  assert.deepEqual(calls[0][1],['--user-data-dir=C:\tmp\profile','--no-first-run','--no-default-browser-check','--new-window','http://localhost:7171/swagger']);
+  assert.equal(calls[0][2].detached,true,'its own process group, so Stop API can end the whole tree');
+  assert.equal(openOwned('chrome','http://localhost:7171/','C:\tmp\profile',{exists,platform:'win32',env,launch}),undefined,'not installed');
+  for(const url of ['javascript:alert(1)','file:///c:/x','http://user:pw@localhost/','not a url'])assert.equal(openOwned('edge',url,'C:\tmp\profile',{exists,platform:'win32',env,launch}),undefined,url);
+  assert.equal(openOwned('firefox','http://localhost/','C:\tmp\profile',{exists:()=>true,launch}),undefined);
+  assert.equal(calls.length,1);
+});
+
 test('direct browser launch picks the installed executable and refuses unsafe URLs',()=>{
   const { open, find, candidates } = require('../src/browsers');
   const calls=[];

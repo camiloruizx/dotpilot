@@ -42,6 +42,11 @@ module.exports = ({ vscode, path, fs, os, randomBytes, portIsOpen, BROWSERS, bro
     return require('../browsers').open(browser, url);
   },
 
+  // Ventana con perfil propio para una API que se inicia por separado: devuelve su proceso (o undefined).
+  launchOwnedBrowser(browser, url, directory) {
+    return require('../browsers').openOwned(browser, url, directory);
+  },
+
   async selectBrowser() {
     const current = this.browser();
     const items = Object.entries(BROWSERS).map(([value, label]) => ({ value, label: this.t(label),

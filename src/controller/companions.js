@@ -2,7 +2,8 @@
 // APIs complementarias: proyectos .NET que se inician antes que el proyecto principal y se detienen junto con él.
 // Son métodos del Controller: extension.js los mezcla en su prototipo. Reciben sus dependencias (incluido
 // `vscode`) para que las pruebas unitarias puedan ejecutarlos con un VS Code simulado.
-module.exports = ({ vscode, path, fs, portIsOpen, profilesFrom, localEndpoint, runArgs, browserUrl }) => {
+module.exports = ({ vscode, path, fs, os, portIsOpen, profilesFrom, localEndpoint, runArgs, browserUrl }) => {
+  const { killTree } = require('../runner');
   const { portsOf, localUrls, matchCandidate, isWebProject, companionName, cleanList, waitForReady } = require('../companions');
   const READY_TIMEOUT = 90000;
 
@@ -38,6 +39,40 @@ module.exports = ({ vscode, path, fs, portIsOpen, profilesFrom, localEndpoint, r
       const browser = this.browser();
       if (browser !== 'external' && this.launchInBrowser(browser, uri.toString())) return;
       if (!(await vscode.env.openExternal(uri))) throw new Error(this.t('No se pudo abrir el navegador.'));
+    },
+
+    // Con las APIs «por separado», su ventana es de la API: cerrarla la detiene, y Detener API la cierra. Es una ventana
+    // con perfil propio cuyo proceso se vigila (no una sesión de depuración, que mostraría la barra flotante de VS Code).
+    // Con el navegador «external», en un espacio remoto o si no se puede abrir, es una pestaña independiente.
+    async openApiBrowser(url, entry, cancelled) {
+      const browser = this.browser();
+      if (browser === 'external' || vscode.env.remoteName) return this.openCompanionBrowser(url);
+      const uri = await vscode.env.asExternalUri(vscode.Uri.parse(url));
+      if (cancelled()) return;
+      await this.closeApiBrowser();
+      const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'dotpilot-browser-'));
+      const child = cancelled() ? undefined : this.launchOwnedBrowser(browser, uri.toString(), directory);
+      if (!child) {
+        await fs.rm(directory, { recursive: true, force: true }).catch(() => {});
+        if (!cancelled()) await this.openCompanionBrowser(url);
+        return;
+      }
+      const run = { child, directory, closing: false };
+      this.apiBrowserRun = run;
+      child.once('exit', () => {
+        if (this.apiBrowserRun === run) this.apiBrowserRun = undefined;
+        void this.removeBrowserDirectory(run);
+        // Cerraron la ventana (no fue Detener API): la API se detiene.
+        if (!run.closing) void this.invoke('stopApi');
+      });
+    },
+
+    async closeApiBrowser() {
+      const run = this.apiBrowserRun;
+      if (!run) return;
+      run.closing = true;
+      this.apiBrowserRun = undefined;
+      await killTree(run.child);
     },
 
     // Proyectos web del espacio de trabajo (menos el principal) que pueden servir de API.
@@ -217,6 +252,7 @@ module.exports = ({ vscode, path, fs, portIsOpen, profilesFrom, localEndpoint, r
     async stopApi() {
       this.apiGeneration++;
       this.apiStarting = false;
+      await this.closeApiBrowser().catch(error => this.output.appendLine(error.message));
       await this.stopCompanions();
       this.result = '';
       this.render();
@@ -249,7 +285,9 @@ module.exports = ({ vscode, path, fs, portIsOpen, profilesFrom, localEndpoint, r
       if (cancelled()) return;
       if (!['Exe', 'WinExe'].includes(props.OutputType)) throw new Error(this.t('La API {0} debe ser una aplicación ejecutable, no una biblioteca.', name));
       const framework = (props.TargetFramework || props.TargetFrameworks || '').split(';').filter(Boolean)[0] || '';
-      const state = { name, url: undefined, exitCode: undefined, proc: undefined };
+      // Si la API termina sola, su ventana se cierra con ella (solo cuando es independiente del proyecto).
+      const state = { name, url: undefined, exitCode: undefined, proc: undefined,
+        onExit: independent ? () => { void this.closeApiBrowser(); } : undefined };
       const terminal = this.appTerminal({
         command: this.config().get('dotnetPath', 'dotnet'), args: runArgs(entry.project, this.configuration, profile?.name || '', framework),
         cwd: path.dirname(entry.project), detectUrl: true,
@@ -271,7 +309,11 @@ module.exports = ({ vscode, path, fs, portIsOpen, profilesFrom, localEndpoint, r
       if (this.config().get('openBrowser', true)) {
         const view = await this.companionBrowse(entry, profile);
         const url = view.open && browserUrl({ url: profile?.url || '', launchUrl: view.path }, state.url);
-        if (url && !cancelled()) await this.openCompanionBrowser(url).catch(error => this.output.appendLine(error.message));
+        if (url && !cancelled()) {
+          // Por separado, la ventana de la API es suya: cerrarla detiene la API. Juntas con el proyecto es una pestaña independiente.
+          const opened = independent ? this.openApiBrowser(url, entry, cancelled) : this.openCompanionBrowser(url);
+          await opened.catch(error => this.output.appendLine(error.message));
+        }
       }
     },
 

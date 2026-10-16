@@ -87,7 +87,7 @@ function setup({ portOpen = false, props = { OutputType: 'Exe', TargetFramework:
     Uri: { parse: url => ({ toString: () => url }) },
     QuickPickItemKind: { Separator: -1 }
   };
-  const methods = createCompanions({ vscode, path, fs: fs.promises, portIsOpen: async () => portOpen, profilesFrom, localEndpoint, runArgs, browserUrl });
+  const methods = createCompanions({ vscode, path, fs: fs.promises, os, portIsOpen: async () => portOpen, profilesFrom, localEndpoint, runArgs, browserUrl });
   const state = new Map();
   const self = Object.assign({
     context: { workspaceState: { get: (key, fallback) => state.has(key) ? state.get(key) : fallback, update: async (key, value) => { value === undefined ? state.delete(key) : state.set(key, value); } } },
@@ -272,4 +272,28 @@ test('a project run that starts while the API is still starting does not cancel 
   await h.self.runApi();
   assert.equal(h.self.companions.length, 1);
   assert.equal(h.self.result, '');
+});
+
+test('Run API opens a window that belongs to the API; running it together with the project keeps an independent tab', async t => {
+  const h = setup(); t.after(h.cleanup);
+  const project = path.join(h.api, 'Api.csproj');
+  fs.writeFileSync(project, '<Project Sdk="Microsoft.NET.Sdk.Web"><ItemGroup><PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" /></ItemGroup></Project>');
+  await h.self.saveCompanions([{ project, profile: 'http' }]);
+  h.self.executeTask = async () => {
+    const companion = h.terminals.at(-1).companion;
+    companion.proc = { exited: false, stop: async () => {} };
+    setTimeout(() => { companion.url = 'http://localhost:5100'; }, 10);
+  };
+  const linked = [];
+  h.self.openApiBrowser = async (url, entry) => { linked.push([url, entry.project]); };
+  // Juntas con el proyecto: pestaña independiente, sin ventana vinculada.
+  await h.self.startCompanions(() => false);
+  assert.deepEqual(linked, []);
+  assert.deepEqual(h.opened, [['edge', 'http://localhost:5100/swagger']]);
+  // Por separado: la ventana es de la API.
+  h.self.companions = []; h.opened.length = 0;
+  h.state.set('companionMode:file:///web', 'separate');
+  await h.self.runApi();
+  assert.deepEqual(linked, [['http://localhost:5100/swagger', project]]);
+  assert.deepEqual(h.opened, []);
 });

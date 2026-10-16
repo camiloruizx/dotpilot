@@ -314,7 +314,7 @@ class Controller {
     }
   }
 
-  dispose() { void this.bridge?.dispose().catch(() => {}); this.bridge = undefined; if (this.appProcess && !this.appProcess.exited) void this.appProcess.stop(); void this.stopCompanions(); this.cancelBrowserMonitor(); this.generation++; this.queryProcess?.kill(); for (const execution of this.tasks) execution.terminate(); void this.closeBrowser().catch(() => {}); }
+  dispose() { void this.bridge?.dispose().catch(() => {}); this.bridge = undefined; if (this.appProcess && !this.appProcess.exited) void this.appProcess.stop(); void this.stopCompanions(); void this.closeApiBrowser().catch(() => {}); this.cancelBrowserMonitor(); this.generation++; this.queryProcess?.kill(); for (const execution of this.tasks) execution.terminate(); void this.closeBrowser().catch(() => {}); }
 }
 
 // Responsabilidades del Controller repartidas por módulo (src/controller). Se mezclan en el prototipo.
