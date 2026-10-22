@@ -4,7 +4,7 @@
 
 DotPilot detects the runnable projects in your workspace, lets you pick a project and launch profile, and gives you Run, Stop, Restart, build and test with a linked browser that closes with your app. It also exposes the same actions to AI assistants through MCP, always with your permission.
 
-[Español](README.es.md) · [Detailed guide](docs/GUIA.md) · [Changelog](CHANGELOG.md)
+[Español](README.es.md) · [Detailed guide](docs/GUIA.md) · [Changelog](CHANGELOG.md) · [Privacy policy](PRIVACY.md)
 
 <img src="media/screenshots/panel-dotnet.png" alt="DotPilot panel with a .NET project and its companion API" width="280"> <img src="media/screenshots/panel-node.png" alt="DotPilot panel running a React + Vite app" width="280"> <img src="media/screenshots/panel-apache.png" alt="DotPilot panel with a PHP site and the Apache (Laragon) profile" width="280">
 

@@ -4,7 +4,7 @@
 
 DotPilot detecta los proyectos ejecutables de tu espacio de trabajo, te deja elegir proyecto y perfil de ejecución, y ofrece Ejecutar, Detener, Reiniciar, compilar y probar con un navegador vinculado que se cierra junto con tu aplicación. Además expone las mismas acciones a los asistentes de IA mediante MCP, siempre con tu permiso.
 
-[English](README.md) · [Guía detallada](docs/GUIA.md) · [Cambios](CHANGELOG.md)
+[English](README.md) · [Guía detallada](docs/GUIA.md) · [Cambios](CHANGELOG.md) · [Política de privacidad](PRIVACY.md)
 
 <img src="media/screenshots/panel-dotnet.png" alt="Panel de DotPilot con un proyecto .NET y su API complementaria" width="280"> <img src="media/screenshots/panel-node.png" alt="Panel de DotPilot ejecutando una app React + Vite" width="280"> <img src="media/screenshots/panel-apache.png" alt="Panel de DotPilot con un sitio PHP y el perfil Apache (Laragon)" width="280">
 
