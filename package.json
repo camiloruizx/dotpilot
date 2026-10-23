@@ -2,7 +2,7 @@
   "name": "dotpilot",
   "displayName": "DotPilot",
   "description": "%extension.description%",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "publisher": "camiloruizx",
   "engines": {
     "vscode": "^1.85.0"
@@ -969,6 +969,9 @@
     "url": "https://acrocode.dev"
   },
   "homepage": "https://acrocode.dev",
+  "sponsor": {
+    "url": "https://ko-fi.com/camiloruizx"
+  },
   "keywords": [
     "dotnet",
     "csharp",

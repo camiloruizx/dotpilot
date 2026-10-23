@@ -1,5 +1,10 @@
 # DotPilot — Changes / Cambios
 
+## 1.0.5
+
+- Added a **privacy policy** ([PRIVACY.md](PRIVACY.md)), linked from the README: DotPilot collects no data and makes no network calls of its own. / Se agregó una **política de privacidad** ([PRIVACY.md](PRIVACY.md)), enlazada desde el README: DotPilot no recopila datos ni hace llamadas de red por su cuenta.
+- Optional **support** link (Ko-fi) in the README and a **Sponsor** button on the Marketplace page. DotPilot stays free and nothing is unlocked by it. / Enlace opcional de **apoyo** (Ko-fi) en el README y botón **Sponsor** en la página del Marketplace. DotPilot sigue siendo gratis y no desbloquea nada.
+
 ## 1.0.4
 
 - With the APIs running **Separately**, the API's browser window (its Swagger page) now belongs to the API: closing it stops the API, just as closing the project's window stops the project, and **Stop API** closes it. With the **external** browser, or together with the project, it stays an independent tab that stops nothing. / Con las APIs en ejecución **por separado**, la ventana del navegador de la API (su página de Swagger) ahora es de la API: cerrarla detiene la API, igual que cerrar la ventana del proyecto detiene el proyecto, y **Detener API** la cierra. Con el navegador **external**, o juntas con el proyecto, sigue siendo una pestaña independiente que no detiene nada.
