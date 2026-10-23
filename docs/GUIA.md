@@ -89,7 +89,7 @@ Run, debug and build .NET projects from a dedicated **DotPilot menu** and a rede
 
 ### Install and start
 
-1. In VS Code, choose **Extensions → … → Install from VSIX…** and select **dotpilot-1.0.5.vsix**. For versions 0.3.0 and earlier, uninstall the old local-dotnet-tools extension first to avoid duplicates.
+1. In VS Code, choose **Extensions → … → Install from VSIX…** and select **dotpilot-1.0.6.vsix**. For versions 0.3.0 and earlier, uninstall the old local-dotnet-tools extension first to avoid duplicates.
 2. Reload the window if requested. Open a trusted folder with a .NET SDK project and select your startup project, launch profile, configuration and framework in the DotPilot view (click the DotPilot icon in the Activity Bar).
 3. Choose **Run**, **Debug** or **Hot Reload**. Debugging requires Microsoft's C# extension; .NET SDK 8+ and VS Code 1.85+ are required. C# Dev Kit is optional.
 
@@ -200,7 +200,7 @@ Controles en inglés y español para trabajar con proyectos .NET desde un menú 
 1. En VS Code abre **Extensiones** (`Ctrl+Shift+X`).
 2. Abre el menú `…` y elige **Instalar desde VSIX…**.
 3. Si tienes DotPilot 0.3.0 o anterior, desinstálalo y recarga VS Code primero: el publicador cambió de `local-dotnet-tools` a `camiloruizx`, por lo que el editor los considera extensiones distintas. Tendrás que volver a seleccionar tu proyecto y perfil.
-4. Selecciona **dotpilot-1.0.5.vsix**. La ficha mostrará `camiloruizx` como publicador local; este identificador todavía no implica una publicación en Marketplace.
+4. Selecciona **dotpilot-1.0.6.vsix**. La ficha mostrará `camiloruizx` como publicador local; este identificador todavía no implica una publicación en Marketplace.
 5. Recarga la ventana si se solicita. Abre tu solución y el panel **DotPilot** con su icono en la barra de actividad.
 6. Selecciona proyecto, perfil —por ejemplo `https`—, configuración y framework. Usa **Depurar**, **Ejecutar** o **Hot Reload**.
 

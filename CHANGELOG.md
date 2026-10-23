@@ -1,5 +1,9 @@
 # DotPilot — Changes / Cambios
 
+## 1.0.6
+
+- The panel footer now has an optional **Ko-fi** link next to GitHub. DotPilot stays free and nothing is unlocked by it. / El pie del panel tiene ahora un enlace opcional a **Ko-fi** junto al de GitHub. DotPilot sigue siendo gratis y no desbloquea nada.
+
 ## 1.0.5
 
 - Added a **privacy policy** ([PRIVACY.md](PRIVACY.md)), linked from the README: DotPilot collects no data and makes no network calls of its own. / Se agregó una **política de privacidad** ([PRIVACY.md](PRIVACY.md)), enlazada desde el README: DotPilot no recopila datos ni hace llamadas de red por su cuenta.
