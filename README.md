@@ -129,6 +129,10 @@ Menus and the command palette follow VS Code's display language; the panel and m
 - *The browser does not open:* check `dotpilot.openBrowser` and that the profile requests it; HTTPS needs a valid development certificate.
 - *Output channel:* **DotPilot: Show output** has the extension's own diagnostics.
 
+## Support
+
+DotPilot is free. If it saves you time, you can [buy me a coffee on Ko-fi](https://ko-fi.com/camiloruizx). It is optional and unlocks nothing.
+
 ## License
 
 MIT © Camilo Ruiz · [acrocode.dev](https://acrocode.dev) · [GitHub](https://github.com/camiloruizx)

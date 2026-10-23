@@ -129,6 +129,10 @@ Los menús y la paleta de comandos siguen el idioma de VS Code; el panel y los m
 - *El navegador no se abre:* revisa `dotpilot.openBrowser` y que el perfil lo pida; HTTPS necesita un certificado de desarrollo válido.
 - *Canal de salida:* **DotPilot: Mostrar salida** tiene los diagnósticos de la extensión.
 
+## Apoyo
+
+DotPilot es gratis. Si te ahorra tiempo, puedes [invitarme un café en Ko-fi](https://ko-fi.com/camiloruizx). Es opcional y no desbloquea nada.
+
 ## Licencia
 
 MIT © Camilo Ruiz · [acrocode.dev](https://acrocode.dev) · [GitHub](https://github.com/camiloruizx)
